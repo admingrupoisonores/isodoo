@@ -1,0 +1,43 @@
+services:
+  odoo:
+    build:
+      context: .
+      args:
+        ODOO_VERSION: ${ODOO_VERSION:-6.0}
+    depends_on:
+      - db
+    ports:
+      - '8080:8080'
+      - '8069:8069'
+    networks:
+      - frontend
+      - dbnet
+    environment:
+      ODOO_VERSION: ${ODOO_VERSION:-6.0}
+      OCONF_log_level: debug
+      OCONF_db_filter: odoodb$
+      OCONF_db_user: odoo
+      OCONF_db_password: odoo
+      OCONF_db_host: odoo-db
+      OCONF_db_name: odoodb
+      OCONF_proxy_mode: false
+    hostname: odoo
+
+  db:
+    image: postgres:${PG_VERSION:-9.3}-alpine
+    networks:
+      - dbnet
+    environment:
+      POSTGRES_DB: odoodb
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_USER: odoo
+      POSTGRES_INITDB_ARGS: --locale=C --encoding=UTF8
+    hostname: odoo-db
+
+
+networks:
+  frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: 127.0.0.1
+  dbnet:

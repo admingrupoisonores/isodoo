@@ -1,0 +1,2 @@
+ARG ODOO_VERSION
+FROM isodoo:${ODOO_VERSION} AS isodoo-core
