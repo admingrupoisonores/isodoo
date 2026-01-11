@@ -26,7 +26,7 @@ To configure Odoo, simply use environment variables with the prefix ```OCONF_{Pa
 | GITHUB_TOKEN | User token to use with git-aggregator | No | "" |
 | GIT_DEPTH_NORMAL | The default depth of commits | Yes | 1 |
 | GIT_DEPTH_MERGE | The default depth of commits when cloning with merges | Yes | 500 |
-| EXT_DEPS_CONSTRAINTS | The constraints for the dependency names (old_name:new_name) separated by commas | No | "" | 
+| EXT_DEPS_CONSTRAINTS | The constraints for the dependency names (old_name:new_name) separated by commas | No | "" |
 
 ** Check the Dockerfile for more configuration variables.
 

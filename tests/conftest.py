@@ -67,7 +67,7 @@ def pytest_addoption(parser):
 def env_info(pytestconfig):
     no_cache = bool(pytestconfig.getoption("no_cache", False))
     odoo_ver = pytestconfig.getoption("odoo_version")
-    odoo_port = '8080' if odoo_ver == "6.0" else '8069'
+    odoo_port = "8080" if odoo_ver == "6.0" else "8069"
 
     return {
         "ip": "10.99.2.38",
@@ -98,7 +98,8 @@ def docker_env(env_info):
     # isOdoo Runtime
     docker = DockerClient(
         compose_files=["./tests/data/project_demo/docker-compose.yaml"],
-        compose_project_name="isodoo-test")
+        compose_project_name="isodoo-test",
+    )
     docker.compose.build(
         "odoo",
         cache=not env_info["options"]["no_cache"],
@@ -113,17 +114,19 @@ def docker_env(env_info):
         detach=True,
         remove_orphans=True,
     )
-    
+
     print("Waiting Odoo...")
     _wait_for_odoo(env_info["ip"], env_info["ports"]["odoo"])
-    
+
     try:
         yield docker
     finally:
         docker.compose.down(remove_orphans=True, volumes=True)
 
+
 @pytest.fixture(scope="session")
 def exec_docker(docker_env):
     def _run(env, args):
         return docker_env.compose.execute("odoo", ["exec_env", env] + args, tty=False)
+
     return _run

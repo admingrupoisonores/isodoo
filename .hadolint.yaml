@@ -2,6 +2,7 @@ ignored:
   - DL3008
   - DL3013
   - DL3016
+  - SC2086
 trustedRegistries:
   - docker.io
   - "*.gcr.io"

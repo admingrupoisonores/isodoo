@@ -11,26 +11,30 @@ BASE_EXTRA_PATH = "/var/lib/odoo/extra"
 BASE_PRIVATE_PATH = "/var/lib/odoo/private"
 OPENERP_VERSIONS = ("6.0", "6.1", "7.0", "8.0", "9.0")
 
-def get_addons_dependencies(search_path='.'):
-    odoo_ver = os.getenv('ODOO_VERSION', '6.0')
-    manifest_name = '__openerp__.py' if odoo_ver in OPENERP_VERSIONS else '__manifest__.py'
+
+def get_addons_dependencies(search_path="."):
+    odoo_ver = os.getenv("ODOO_VERSION", "6.0")
+    manifest_name = (
+        "__openerp__.py" if odoo_ver in OPENERP_VERSIONS else "__manifest__.py"
+    )
     all_deps = set()
     for root, _, files in os.walk(search_path):
         if manifest_name in files:
             manifest_path = os.path.join(root, manifest_name)
             try:
-                manifest_content = '{}'
-                with open(manifest_path, 'r', encoding='utf-8') as f:
+                manifest_content = "{}"
+                with open(manifest_path, "r", encoding="utf-8") as f:
                     manifest_content = f.read().strip()
                 manifest = ast.literal_eval(manifest_content)
-                depends = manifest.get('depends')
+                depends = manifest.get("depends")
                 if isinstance(depends, list):
                     all_deps.update(depends)
             except Exception as e:
                 print(f"Error loading {manifest_path}: {e}", file=sys.stderr)
     return list(all_deps)
 
-def get_available_addons(search_path='.'):
+
+def get_available_addons(search_path="."):
     final_dirs = set()
     for root, dirs, _ in os.walk(search_path):
         final_dirs.update(dirs)

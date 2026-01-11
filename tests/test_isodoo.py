@@ -3,7 +3,18 @@ import requests
 
 OLDER_VERSIONS = ("6.0", "6.1", "7.0")
 OPENERP_VERSIONS = ("6.0", "6.1", "7.0", "8.0", "9.0")
-ODOO_VERSIONS = ("10.0", "11.0", "12.0", "13.0", "14.0", "15.0", "16.0", "17.0", "18.0", "19.0")
+ODOO_VERSIONS = (
+    "10.0",
+    "11.0",
+    "12.0",
+    "13.0",
+    "14.0",
+    "15.0",
+    "16.0",
+    "17.0",
+    "18.0",
+    "19.0",
+)
 
 
 class TestIsOdooContainer:
@@ -26,9 +37,13 @@ class TestIsOdooContainer:
         assert "hello" in apt_info
         apt_info = exec_docker("odoo", ["dpkg-query", "-W", "-f='${Status}\n'", "apt"])
         assert "ok installed" in apt_info
-        apt_info = exec_docker("odoo", ["dpkg-query", "-W", "-f='${Status}\n'", "hello"])
+        apt_info = exec_docker(
+            "odoo", ["dpkg-query", "-W", "-f='${Status}\n'", "hello"]
+        )
         assert "ok installed" in apt_info
-        apt_info = exec_docker("odoo", ["dpkg-query", "-W", "-f='${Status}\n'", "invented1234"])
+        apt_info = exec_docker(
+            "odoo", ["dpkg-query", "-W", "-f='${Status}\n'", "invented1234"]
+        )
         assert not apt_info
 
     def test_odoo_npm_dependencies(self, exec_docker, env_info):
@@ -68,15 +83,20 @@ class TestIsOdooContainer:
         addons_info = exec_docker("odoo", ["ls", "/var/lib/odoo/private"])
         assert "cannot access" not in addons_info
         assert "demo_addon" in addons_info
+
         def install_module(modname):
-            return exec_docker("odoo", [
-                "odoo", 
-                "-c", 
-                "/etc/odoo/odoo.conf", 
-                "-i", 
-                modname,
-                "--stop-after-init",
-            ])
+            return exec_docker(
+                "odoo",
+                [
+                    "odoo",
+                    "-c",
+                    "/etc/odoo/odoo.conf",
+                    "-i",
+                    modname,
+                    "--stop-after-init",
+                ],
+            )
+
         addons_info = install_module("invented1234")
         assert "ignored: invented1234" in addons_info
         addons_info = install_module("demo_addon")
@@ -92,7 +112,7 @@ class TestIsOdooContainer:
             return None
         pip_info = exec_docker("odoo", ["cat", "/opt/odoo/pip.txt"])
         assert "xlwt" in pip_info
-        pip_info = exec_docker("odoo", ["pip", "show", 'xlwt'])
+        pip_info = exec_docker("odoo", ["pip", "show", "xlwt"])
         assert "not found" not in pip_info
 
     def test_simple_http(self, docker_env, env_info):
@@ -103,5 +123,9 @@ class TestIsOdooContainer:
             get_url = f"http://{env_info['ip']}:{env_info['ports']['odoo']}/web/login"
         resp = requests.get(get_url)
         assert resp.status_code == 200
-        projname = "openerp" if env_info["options"]["odoo_version"] in OLDER_VERSIONS else "Odoo"
+        projname = (
+            "openerp"
+            if env_info["options"]["odoo_version"] in OLDER_VERSIONS
+            else "Odoo"
+        )
         assert projname in resp.text

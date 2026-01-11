@@ -16,23 +16,27 @@ def load_existing_deps(file_path):
     """Carga deps existentes (incluso si el archivo no existe → set vacío)."""
     deps = set()
     if os.path.exists(file_path):
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith('#'):
+                if line and not line.startswith("#"):
                     deps.add(line)
     return deps
+
 
 def save_deps(file_path, deps):
     """Sobrescribe el archivo solo si hay contenido."""
     if deps:
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(sorted(deps)) + '\n')
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(sorted(deps)) + "\n")
 
-def get_external_dependencies(search_path='.'):
-    odoo_ver = os.getenv('ODOO_VERSION', '6.0')
-    manifest_name = '__openerp__.py' if odoo_ver in OPENERP_VERSIONS else '__manifest__.py'
+
+def get_external_dependencies(search_path="."):
+    odoo_ver = os.getenv("ODOO_VERSION", "6.0")
+    manifest_name = (
+        "__openerp__.py" if odoo_ver in OPENERP_VERSIONS else "__manifest__.py"
+    )
     pip_deps = set()
     deb_deps = set()
     npm_deps = set()
@@ -41,30 +45,32 @@ def get_external_dependencies(search_path='.'):
         if manifest_name in files:
             manifest_path = os.path.join(root, manifest_name)
             try:
-                manifest_content = '{}'
-                with open(manifest_path, 'r', encoding='utf-8') as f:
+                manifest_content = "{}"
+                with open(manifest_path, "r", encoding="utf-8") as f:
                     manifest_content = f.read().strip()
                 manifest = ast.literal_eval(manifest_content)
-                external = manifest.get('external_dependencies')
+                external = manifest.get("external_dependencies")
                 if isinstance(external, dict):
-                    pip_deps.update(external.get('python', []))
-                    deb_deps.update(external.get('deb', []))
-                    npm_deps.update(external.get('npm', []))
+                    pip_deps.update(external.get("python", []))
+                    deb_deps.update(external.get("deb", []))
+                    npm_deps.update(external.get("npm", []))
             except Exception as e:
                 print(f"Error loading {manifest_path}: {e}", file=sys.stderr)
 
     return pip_deps, deb_deps, npm_deps
 
+
 def apply_replacements(deps, replacements):
     result = set()
     for dep in deps:
         for old, new in replacements.items():
-            print("Revisando:", dep, " --- ", old, " ----" , new)
+            print("Revisando:", dep, " --- ", old, " ----", new)
             if dep.startswith(old):
                 dep = dep.replace(old, new, 1)
                 break
         result.add(dep)
     return result
+
 
 if __name__ == "__main__":
     existing_pip = load_existing_deps(PIP_FILE)

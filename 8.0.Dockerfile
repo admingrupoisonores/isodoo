@@ -13,7 +13,7 @@ ARG TARGETARCH \
     WKHTMLTOPDF_PKGS="libfreetype6 libjpeg62-turbo libpng16-16 libxcb1 libxext6 libxrender1 xfonts-75dpi xfonts-base" \
     ODOO_PKGS="fonts-liberation libpq-dev libjpeg-dev zlib1g-dev libssl-dev libc6-dev libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev"
 
-
+# hadolint ignore=SC2086
 RUN set -eux; \
     rm /etc/apt/sources.list; \
     echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list.d/buster.list; \
@@ -51,13 +51,14 @@ RUN set -eux; \
 ARG USER_ODOO_UID=7777 \
     USER_ODOO_GID=7777
 
+# hadolint ignore=SC2153
 RUN set -eux; \
-    groupadd --gid ${USER_ODOO_GID} --system odoo; \
+    groupadd --gid "${USER_ODOO_GID}" --system odoo; \
     useradd \
         --home-dir /home/odoo \
         --system \
-        --uid ${USER_ODOO_UID} \
-        --gid ${USER_ODOO_GID} \
+        --uid "${USER_ODOO_UID}" \
+        --gid "${USER_ODOO_GID}" \
         -s /bin/bash \
         odoo; \
     mkdir -p /home/odoo /etc/odoo /opt/odoo /var/lib/odoo; \
