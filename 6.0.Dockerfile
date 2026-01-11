@@ -69,8 +69,8 @@ RUN set -eux; \
     eval "$(pyenv init --path)"; \
     eval "$(pyenv init -)"; \
     eval "$(pyenv virtualenv-init -)"; \
-    pyenv install ${SYSTEM_PYTHON_VERSION} ${ODOO_PYTHON_VERSION}; \
-    pyenv global ${SYSTEM_PYTHON_VERSION} ${ODOO_PYTHON_VERSION}; \
+    pyenv install "${SYSTEM_PYTHON_VERSION}" "${ODOO_PYTHON_VERSION}"; \
+    pyenv global "${SYSTEM_PYTHON_VERSION}" "${ODOO_PYTHON_VERSION}"; \
     rm -rf ${PYENV_ROOT}/cache/*;
 
 
@@ -78,9 +78,8 @@ RUN set -eux; \
 WORKDIR /home/odoo
 
 # Install System PIP & Extra dependencies
-# hadolint ignore=SC1091
 RUN set -eux; \
-    $PYTHON_SYSTEM_BIN_NAME -m venv ~/.venv; \
+    "$PYTHON_SYSTEM_BIN_NAME" -m venv ~/.venv; \
     . .venv/bin/activate; \
     pip install --no-cache-dir --upgrade pip; \
     pip install --no-cache-dir click-odoo-contrib git-aggregator pyyaml psycopg2; \
@@ -95,14 +94,13 @@ WORKDIR /opt/odoo
 # Install Odoo PIP & Extra dependencies
 ARG ODOO_EXTRA_PIP_PKGS="pyOpenSSL==17.5.0"
 
-# hadolint ignore=SC1091
 RUN set -eux; \
-    curl -L -o get-pip.py https://bootstrap.pypa.io/pip/${ODOO_PYTHON_VERSION}/get-pip.py; \
-    $PYTHON_ODOO_BIN_NAME get-pip.py; \
+    curl -L -o get-pip.py "https://bootstrap.pypa.io/pip/${ODOO_PYTHON_VERSION}/get-pip.py"; \
+    "$PYTHON_ODOO_BIN_NAME" get-pip.py; \
     rm -f get-pip.py; \
-    $PYTHON_ODOO_BIN_NAME -m pip install --no-cache-dir --upgrade pip; \
-    $PYTHON_ODOO_BIN_NAME -m pip install --no-cache-dir virtualenv; \
-    $PYTHON_ODOO_BIN_NAME -m virtualenv /opt/odoo/.venv; \
+    "$PYTHON_ODOO_BIN_NAME" -m pip install --no-cache-dir --upgrade pip; \
+    "$PYTHON_ODOO_BIN_NAME" -m pip install --no-cache-dir virtualenv; \
+    "$PYTHON_ODOO_BIN_NAME" -m virtualenv /opt/odoo/.venv; \
     . .venv/bin/activate; \
     pip install --no-cache-dir ${ODOO_EXTRA_PIP_PKGS}; \
     pip cache purge; \
@@ -166,9 +164,9 @@ ONBUILD RUN set -ex; \
     [ "$AUTO_FILL_REPOS" = true ] && auto_fill_repos; \
     gitaggregate -c repos.yaml --expand-env; \
     chmod +x /opt/odoo/odoo/bin/openerp-server.py; \
-    curl -L -o oweb.tar.gz https://nightly.odoo.com/old/openerp-${ODOO_VERSION}/nightly/openerp-web-${ODOO_WEB_VERSION}-${ODOO_WEB_VERSION_PACKAGE}.tar.gz; \
+    curl -L -o oweb.tar.gz "https://nightly.odoo.com/old/openerp-${ODOO_VERSION}/nightly/openerp-web-${ODOO_WEB_VERSION}-${ODOO_WEB_VERSION_PACKAGE}.tar.gz"; \
     tar -xvf oweb.tar.gz; \
-    chmod +x /opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py; \
+    chmod +x "/opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py"; \
     rm -f oweb.tar.gz; \
     create_addons_symlinks; \
     [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \

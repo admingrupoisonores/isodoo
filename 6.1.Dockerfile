@@ -69,8 +69,8 @@ RUN set -eux; \
     eval "$(pyenv init --path)"; \
     eval "$(pyenv init -)"; \
     eval "$(pyenv virtualenv-init -)"; \
-    pyenv install ${SYSTEM_PYTHON_VERSION} ${ODOO_PYTHON_VERSION}; \
-    pyenv global ${SYSTEM_PYTHON_VERSION} ${ODOO_PYTHON_VERSION}; \
+    pyenv install "${SYSTEM_PYTHON_VERSION}" "${ODOO_PYTHON_VERSION}"; \
+    pyenv global "${SYSTEM_PYTHON_VERSION}" "${ODOO_PYTHON_VERSION}"; \
     rm -rf ${PYENV_ROOT}/cache/*;
 
 
@@ -78,9 +78,8 @@ RUN set -eux; \
 WORKDIR /home/odoo
 
 # Install System PIP & Extra dependencies
-# hadolint ignore=SC1091
 RUN set -eux; \
-    $PYTHON_SYSTEM_BIN_NAME -m venv ~/.venv; \
+    "$PYTHON_SYSTEM_BIN_NAME" -m venv ~/.venv; \
     . .venv/bin/activate; \
     pip install --no-cache-dir --upgrade pip; \
     pip install --no-cache-dir click-odoo-contrib git-aggregator pyyaml psycopg2; \
@@ -94,28 +93,27 @@ WORKDIR /opt/odoo
 ARG ODOO_EXTRA_PIP_PKGS="pyOpenSSL==17.5.0"
 
 # Install Odoo PIP & Extra dependencies
-# hadolint ignore=SC1091
 RUN set -eux; \
-    curl -L -o get-pip.py https://bootstrap.pypa.io/pip/${ODOO_PYTHON_VERSION}/get-pip.py; \
-    $PYTHON_ODOO_BIN_NAME get-pip.py; \
+    curl -L -o get-pip.py "https://bootstrap.pypa.io/pip/${ODOO_PYTHON_VERSION}/get-pip.py"; \
+    "$PYTHON_ODOO_BIN_NAME" get-pip.py; \
     rm -f get-pip.py; \
-    $PYTHON_ODOO_BIN_NAME -m pip install --no-cache-dir --upgrade pip; \
-    $PYTHON_ODOO_BIN_NAME -m pip install --no-cache-dir virtualenv; \
-    $PYTHON_ODOO_BIN_NAME -m virtualenv /opt/odoo/.venv; \
+    "$PYTHON_ODOO_BIN_NAME" -m pip install --no-cache-dir --upgrade pip; \
+    "$PYTHON_ODOO_BIN_NAME" -m pip install --no-cache-dir virtualenv; \
+    "$PYTHON_ODOO_BIN_NAME" -m virtualenv /opt/odoo/.venv; \
     . .venv/bin/activate; \
     pip install --no-cache-dir ${ODOO_EXTRA_PIP_PKGS}; \
     pip cache purge; \
     deactivate;
 
 # Install PyXML (used by python zsi package)
-# hadolint ignore=DL3003,SC1091
+# hadolint ignore=DL3003
 RUN set -eux; \
     curl -L -o PyXML.tar.gz https://github.com/actmd/PyXML/archive/refs/tags/0.8.4.tar.gz; \
     tar -xzvf PyXML.tar.gz; \
     . .venv/bin/activate; \
     cd ./PyXML-0.8.4; \
-    $PYTHON_ODOO_BIN_NAME setup.py build --with-xslt; \
-    $PYTHON_ODOO_BIN_NAME setup.py install; \
+    "$PYTHON_ODOO_BIN_NAME" setup.py build --with-xslt; \
+    "$PYTHON_ODOO_BIN_NAME" setup.py install; \
     cd ..; \
     deactivate; \
     rm -f PyXML.tar.gz; \
@@ -204,7 +202,7 @@ ONBUILD USER odoo
 
 ONBUILD WORKDIR /opt/odoo/odoo
 
-# hadolint ignore=SC1091,DL3042
+# hadolint ignore=DL3042
 ONBUILD RUN set -ex; \
     . ../.venv/bin/activate; \
     printf '#!/bin/bash\n/opt/odoo/odoo/openerp-server "$@"' > ../.venv/bin/odoo; \

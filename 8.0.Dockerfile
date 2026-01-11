@@ -41,7 +41,7 @@ ARG WKHTMLTOPDF_VERSION=0.12.1.4-2 \
     WKHTMLTOPDF_BASE_DEBIAN_VER=buster
 
 RUN set -eux; \
-    curl -L -o wkhtmltox.deb https://github.com/wkhtmltopdf/packaging/releases/download/${WKHTMLTOPDF_VERSION}/wkhtmltox_${WKHTMLTOPDF_VERSION}.${WKHTMLTOPDF_BASE_DEBIAN_VER}_${TARGETARCH}.deb; \
+    curl -L -o wkhtmltox.deb "https://github.com/wkhtmltopdf/packaging/releases/download/${WKHTMLTOPDF_VERSION}/wkhtmltox_${WKHTMLTOPDF_VERSION}.${WKHTMLTOPDF_BASE_DEBIAN_VER}_${TARGETARCH}.deb"; \
     dpkg -i ./wkhtmltox.deb || apt-get install --no-install-recommends -f -y; \
     apt-get install --no-install-recommends -y ./wkhtmltox.deb; \
     rm -rf /tmp/*;
@@ -74,11 +74,12 @@ ARG NVM_VERSION=v0.40.3 \
     NODE_VERSION=0.12.18 \
     ODOO_NPM_PKGS="rtlcss less@1.7.5 less-plugin-clean-css"
 
+# hadolint ignore=SC2086
 RUN set -ex; \
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh | bash; \
+    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash; \
     . ~/.nvm/nvm.sh; \
-    nvm install ${NODE_VERSION}; \
-    nvm use ${NODE_VERSION}; \
+    nvm install "${NODE_VERSION}"; \
+    nvm use "${NODE_VERSION}"; \
     npm install -g ${ODOO_NPM_PKGS};
 
 
@@ -96,8 +97,8 @@ RUN set -eux; \
     eval "$(pyenv init --path)"; \
     eval "$(pyenv init -)"; \
     eval "$(pyenv virtualenv-init -)"; \
-    pyenv install ${SYSTEM_PYTHON_VERSION} ${ODOO_PYTHON_VERSION}; \
-    pyenv global ${SYSTEM_PYTHON_VERSION} ${ODOO_PYTHON_VERSION}; \
+    pyenv install "${SYSTEM_PYTHON_VERSION}" "${ODOO_PYTHON_VERSION}"; \
+    pyenv global "${SYSTEM_PYTHON_VERSION}" "${ODOO_PYTHON_VERSION}"; \
     rm -rf ${PYENV_ROOT}/cache/*;
 
 
@@ -105,9 +106,8 @@ RUN set -eux; \
 WORKDIR /home/odoo
 
 # Install System PIP & Extra dependencies
-# hadolint ignore=SC1091
 RUN set -eux; \
-    $PYTHON_SYSTEM_BIN_NAME -m venv ~/.venv; \
+    "$PYTHON_SYSTEM_BIN_NAME" -m venv ~/.venv; \
     . .venv/bin/activate; \
     pip install --no-cache-dir --upgrade pip; \
     pip install --no-cache-dir click-odoo-contrib git-aggregator pyyaml psycopg2; \
@@ -121,14 +121,13 @@ WORKDIR /opt/odoo
 ARG ODOO_EXTRA_PIP_PKGS="pyinotify pyOpenSSL"
 
 # Install Odoo PIP & Extra dependencies
-# hadolint ignore=SC1091
 RUN set -eux; \
-    curl -L -o get-pip.py https://bootstrap.pypa.io/pip/${ODOO_PYTHON_VERSION}/get-pip.py; \
-    $PYTHON_ODOO_BIN_NAME get-pip.py; \
+    curl -L -o get-pip.py "https://bootstrap.pypa.io/pip/${ODOO_PYTHON_VERSION}/get-pip.py"; \
+    "$PYTHON_ODOO_BIN_NAME" get-pip.py; \
     rm -f get-pip.py; \
-    $PYTHON_ODOO_BIN_NAME -m pip install --no-cache-dir --upgrade pip; \
-    $PYTHON_ODOO_BIN_NAME -m pip install --no-cache-dir virtualenv; \
-    $PYTHON_ODOO_BIN_NAME -m virtualenv /opt/odoo/.venv; \
+    "$PYTHON_ODOO_BIN_NAME" -m pip install --no-cache-dir --upgrade pip; \
+    "$PYTHON_ODOO_BIN_NAME" -m pip install --no-cache-dir virtualenv; \
+    "$PYTHON_ODOO_BIN_NAME" -m virtualenv /opt/odoo/.venv; \
     . .venv/bin/activate; \
     pip install --no-cache-dir ${ODOO_EXTRA_PIP_PKGS}; \
     pip cache purge; \
@@ -217,7 +216,7 @@ ONBUILD USER odoo
 
 ONBUILD WORKDIR /opt/odoo/odoo
 
-# hadolint ignore=SC1091,DL3042
+# hadolint ignore=DL3042
 ONBUILD RUN set -ex; \
     . ../.venv/bin/activate; \
     printf '#!/bin/bash\n/opt/odoo/odoo/odoo.py "$@"' > ../.venv/bin/odoo; \
