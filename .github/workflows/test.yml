@@ -43,10 +43,10 @@ jobs:
     strategy:
       matrix:
         odoo_version:
-          - 6.0
-          - 6.1
-          - 7.0
-          - 8.0
+          - "6.0"
+          - "6.1"
+          - "7.0"
+          - "8.0"
         python-version: [3.13]
       fail-fast: false
     runs-on: ubuntu-latest
