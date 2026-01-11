@@ -71,7 +71,7 @@ services:
 
   db:
     image: postgres:18.0-alpine
-        networks:
+    networks:
       - dbnet
     environment:
       POSTGRES_DB: odoodb
