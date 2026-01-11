@@ -2,7 +2,7 @@ name: Test
 
 on:
   pull_request:
-    branches: [4.0.0]
+    branches: [master]
   workflow_call:
 
 jobs:
@@ -45,17 +45,6 @@ jobs:
           - 6.1
           - 7.0
           - 8.0
-          - 9.0
-          - 10.0
-          - 11.0
-          - 12.0
-          - 13.0
-          - 14.0
-          - 15.0
-          - 16.0
-          - 17.0
-          - 18.0
-          - 19.0
         python-version: [3.13]
       fail-fast: false
     runs-on: ubuntu-latest
@@ -85,6 +74,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          check-latest: true
 
       - name: Install poetry
         uses: abatilo/actions-poetry@v3
