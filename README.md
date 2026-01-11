@@ -9,7 +9,7 @@ A lightweight image for running Odoo from 6.0 to the moon! Strongly inspired by 
 ## :ballot_box_with_check: Features
 
 - Installation from source code
-- Detect missing modules at build time 1
+- Detect missing modules at build time
 - Automatically obtains and downloads modules dependencies
 - Strong use of virtual environments
 
@@ -21,9 +21,14 @@ To configure Odoo, simply use environment variables with the prefix ```OCONF_{Pa
 
 ### Other Env. Variables
 
-| Name | Description | Required |
-|----------------|-------------|-------------|
-| GITHUB_TOKEN | User token to use with git-aggregator | No |
+| Name | Description | Required | Default |
+|----------------|-------------|-------------|-------------|
+| GITHUB_TOKEN | User token to use with git-aggregator | No | "" |
+| GIT_DEPTH_NORMAL | The default depth of commits | Yes | 1 |
+| GIT_DEPTH_MERGE | The default depth of commits when cloning with merges | Yes | 500 |
+| EXT_DEPS_CONSTRAINTS | The constraints for the dependency names (old_name:new_name) separated by commas | No | "" | 
+
+** Check the Dockerfile for more configuration variables.
 
 
 ### Default Ports
@@ -42,10 +47,12 @@ services:
   odoo:
     build:
       context: .
-      args:
-        ODOO_VERSION: 19.0
+      additional_contexts:
+        deps: ./deps
+        addons: ./addons
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - '8069:8069'
     networks:
@@ -64,7 +71,7 @@ services:
 
   db:
     image: postgres:18.0-alpine
-    networks:
+        networks:
       - dbnet
     environment:
       POSTGRES_DB: odoodb
@@ -72,6 +79,12 @@ services:
       POSTGRES_USER: odoo
       POSTGRES_INITDB_ARGS: --locale=C --encoding=UTF8
     hostname: odoo-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d odoodb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 
 networks:

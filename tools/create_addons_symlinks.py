@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright  Alexandre Díaz <dev@redneboa.es>
 import yaml
 import os
 import logging

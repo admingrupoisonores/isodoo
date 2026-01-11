@@ -1,12 +1,15 @@
 #!/bin/bash
+# Copyright  Alexandre Díaz <dev@redneboa.es>
 
 if [ $# -lt 2 ]; then
-    echo "Error: You must provide the environment name (ENVA or ENVB) and a command"
-    echo "Usage: $0 <ENVA|ENVB> <command>"
+    echo "Error: You must provide the environment name (ODOO or SYSTEM) and a command"
+    echo "Usage: $0 <ODOO|SYSTEM> <command>"
     exit 1
 fi
 
-case "$1" in
+ENV_UPPER=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+
+case "$ENV_UPPER" in
     "ODOO")
         VENV_PATH="/opt/odoo/.venv/bin/activate"
         ;;
@@ -24,6 +27,7 @@ if [ ! -f "$VENV_PATH" ]; then
     exit 1
 fi
 
+[ -f "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
 source "$VENV_PATH"
 
 shift

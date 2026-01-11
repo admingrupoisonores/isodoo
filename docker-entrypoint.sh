@@ -2,7 +2,7 @@
 set -e
 
 # Enable NODE environment
-[ -f "~/.nvm/nvm.sh" ] && . ~/.nvm/nvm.sh
+[ -f "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
 
 # Use system python environment
 .  ~/.venv/bin/activate

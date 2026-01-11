@@ -1,5 +1,3 @@
 __pycache__/
 /.pytest_cache
 /.venv
-tests/data/project_demo/addons/git/*
-!tests/data/project_demo/addons/git/repos.yaml

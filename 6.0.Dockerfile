@@ -8,8 +8,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 
 # Install system packages
-ARG TARGETARCH
-ARG ODOO_PKGS="fonts-liberation libpq-dev libjpeg-dev zlib1g-dev libssl-dev libc6-dev libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev"
+ARG TARGETARCH \
+    ODOO_PKGS="fonts-liberation libpq-dev libjpeg-dev zlib1g-dev libssl-dev libc6-dev libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev"
 
 RUN set -eux; \
     rm /etc/apt/sources.list; \
@@ -33,8 +33,8 @@ RUN set -eux; \
 
 
 # Create the runtime user
-ARG USER_ODOO_UID=7777
-ARG USER_ODOO_GID=7777
+ARG USER_ODOO_UID=7777 \
+    USER_ODOO_GID=7777
 
 RUN set -eux; \
     groupadd --gid ${USER_ODOO_GID} --system odoo; \
@@ -54,13 +54,13 @@ USER odoo
 
 
 # Install & activate PyEnv
+ARG ODOO_PYTHON_VERSION=2.7 \
+    SYSTEM_PYTHON_VERSION=3
+ARG PYTHON_SYSTEM_BIN_NAME=python${SYSTEM_PYTHON_VERSION} \
+    PYTHON_ODOO_BIN_NAME=python${ODOO_PYTHON_VERSION}
 ENV PATH="/home/odoo/.pyenv/bin:/home/odoo/.pyenv/shims:$PATH" \
     PYENV_ROOT="/home/odoo/.pyenv" \
-    PYENV_VIRTUALENV_DISABLE_PROMPT=1 \
-    ODOO_PYTHON_VERSION=2.7 \
-    SYSTEM_PYTHON_VERSION=3
-ENV PYTHON_SYSTEM_BIN_NAME=python${SYSTEM_PYTHON_VERSION} \
-    PYTHON_ODOO_BIN_NAME=python${ODOO_PYTHON_VERSION}
+    PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
 RUN set -eux; \
     curl -fsSL https://pyenv.run | bash; \
@@ -76,7 +76,7 @@ RUN set -eux; \
 WORKDIR /home/odoo
 
 # Install System PIP & Extra dependencies
- # hadolint ignore=SC1091
+# hadolint ignore=SC1091
 RUN set -eux; \
     $PYTHON_SYSTEM_BIN_NAME -m venv ~/.venv; \
     . .venv/bin/activate; \
@@ -115,12 +115,18 @@ COPY docker-entrypoint.sh /usr/local/sbin/
 COPY tools/exec_env.sh /usr/local/sbin/exec_env
 COPY tools/generate_config.py /usr/local/sbin/generate_config
 COPY tools/create_addons_symlinks.py /usr/local/sbin/create_addons_symlinks
+COPY tools/check_addons_dependencies.py /usr/local/sbin/check_addons_dependencies
+COPY tools/auto_fill_external_dependencies.py /usr/local/sbin/auto_fill_external_dependencies
 COPY tools/wait_for_psql.py /usr/local/sbin/wait_for_psql
+COPY tools/auto_fill_repos.py /usr/local/sbin/auto_fill_repos
 RUN chmod +x \
     /usr/local/sbin/docker-entrypoint.sh \
     /usr/local/sbin/exec_env \
     /usr/local/sbin/generate_config \
     /usr/local/sbin/create_addons_symlinks \
+    /usr/local/sbin/check_addons_dependencies \
+    /usr/local/sbin/auto_fill_external_dependencies \
+    /usr/local/sbin/auto_fill_repos \
     /usr/local/sbin/wait_for_psql;
 
 
@@ -129,26 +135,25 @@ USER odoo
 
 
 # Install Odoo + Extras
-ONBUILD ENV LC_ALL=C.UTF-8 \
-            LANG=C.UTF-8 \
+ONBUILD ARG EXT_DEPS_CONSTRAINTS='' \
             ODOO_VERSION=6.0 \
             ODOO_WEB_VERSION=6.0.4 \
             ODOO_WEB_VERSION_PACKAGE=20171009-r4929 \
+            VERIFY_MISSING_MODULES=true \
+            AUTO_DOWNLOAD_DEPENDENCIES=true \
+            AUTO_FILL_REPOS=true
+ONBUILD ENV LC_ALL=C.UTF-8 \
+            LANG=C.UTF-8 \
             GIT_DEPTH_NORMAL=1 \
             GIT_DEPTH_MERGE=500 \
-            OCONF_addons_path="/var/lib/odoo/core,/var/lib/odoo/extra" \
-            OCONF_workers=2
+            EXT_DEPS_CONSTRAINTS=${EXT_DEPS_CONSTRAINTS} \
+            ODOO_VERSION=${ODOO_VERSION} \
+            OCONF_addons_path="/var/lib/odoo/core,/var/lib/odoo/extra"
 
-ONBUILD COPY ./deps/apt.txt /opt/odoo/apt.txt
-ONBUILD COPY ./deps/pip.txt /opt/odoo/pip.txt
-ONBUILD COPY ./addons/repos.yaml /opt/odoo/repos.yaml
-ONBUILD COPY ./addons/addons.yaml /opt/odoo/addons.yaml
-
-ONBUILD USER root
-
-ONBUILD RUN set -ex; \
-    apt-get update; \
-    cat /opt/odoo/apt.txt | apt-get install -y --no-install-recommends;
+ONBUILD COPY --from=deps --chown=odoo:odoo apt.txt /opt/odoo/apt.txt
+ONBUILD COPY --from=deps --chown=odoo:odoo pip.txt /opt/odoo/pip.txt
+ONBUILD COPY --from=addons --chown=odoo:odoo repos.yaml /opt/odoo/repos.yaml
+ONBUILD COPY --from=addons --chown=odoo:odoo addons.yaml /opt/odoo/addons.yaml
 
 ONBUILD USER odoo
 
@@ -156,6 +161,7 @@ ONBUILD WORKDIR /opt/odoo
 
 ONBUILD RUN set -ex; \
     . ~/.venv/bin/activate; \
+    [ "$AUTO_FILL_REPOS" = true ] && auto_fill_repos; \
     gitaggregate -c repos.yaml --expand-env; \
     chmod +x /opt/odoo/odoo/bin/openerp-server.py; \
     curl -L -o oweb.tar.gz https://nightly.odoo.com/old/openerp-${ODOO_VERSION}/nightly/openerp-web-${ODOO_WEB_VERSION}-${ODOO_WEB_VERSION_PACKAGE}.tar.gz; \
@@ -163,7 +169,20 @@ ONBUILD RUN set -ex; \
     chmod +x /opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py; \
     rm -f oweb.tar.gz; \
     create_addons_symlinks; \
+    [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \
     deactivate;
+
+ONBUILD USER root
+
+ONBUILD RUN set -ex; \
+    [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
+    apt-get update; \
+    xargs apt-get install -y --no-install-recommends < /opt/odoo/apt.txt; \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*;
+
+ONBUILD USER odoo
 
 ONBUILD WORKDIR /opt/odoo/odoo
 
@@ -176,9 +195,9 @@ ONBUILD RUN set -ex; \
     pip install --no-binary psycopg2 -r requirements.txt; \
     pip install -r /opt/odoo/pip.txt; \
     pip cache purge; \
-    find .. -name "build" -type d -exec rm -rf {} +; \
+    find .. -maxdepth 3 -name "build" -type d -exec rm -rf {} +; \
     find .. -name "*.egg-info" -type d -exec rm -rf {} +; \
-    find .. -name "*.pyc" -exec rm -f {} +; \
+    find .. -name "*.pyc" -type f -delete; \
     rm -rf /tmp/*; \
     # Post-configurations
     python -m compileall /var/lib/odoo/; \
@@ -192,7 +211,7 @@ ONBUILD WORKDIR /opt/odoo/openerp-web-$ODOO_WEB_VERSION
 ONBUILD RUN set -ex; \
     . ../.venv/bin/activate; \
     cat doc/openerp-web.cfg > /etc/odoo/openerp-web.cfg; \
-    printf '#!/bin/bash\n/opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py "$@"' > ${VIRTUAL_ENV}/bin/openerp-web; \
+    printf "#!/bin/bash\n/opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py \"\$@\"\n" > ${VIRTUAL_ENV}/bin/openerp-web; \
     chmod +x ${VIRTUAL_ENV}/bin/openerp-web; \
     # Ensure all is working
     openerp-web --version; \
@@ -208,4 +227,4 @@ EXPOSE 8080 8069 8070 8071
 
 # Run
 ENTRYPOINT ["/usr/local/sbin/docker-entrypoint.sh"]
-CMD ["openerp-web", "--config", "/etc/odoo/openerp-web.cfg"]
+CMD ["openerp-web", "-c", "/etc/odoo/openerp-web.cfg"]

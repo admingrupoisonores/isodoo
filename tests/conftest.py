@@ -1,15 +1,61 @@
 # Copyright  Alexandre Díaz <dev@redneboa.es>
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-
+import os
 import time
 import pytest
 from python_on_whales import DockerClient
 
-ODOO_PORT = "8069"
 IMAGE_TAG_NAME = "test:docker-isodoo"
-SUBNET = "172.20.0.0/16"
-GATEWAY = "172.20.0.1"
-IP_ADDRESS = "172.20.0.5"
+PG_VERSIONS = {
+    "6.0": "9.3",
+    "6.1": "9.3",
+    "7.0": "9.3",
+    "8.0": "9.6",
+    "9.0": "11",
+    "10.0": "12",
+    "11.0": "13",
+    "12.0": "14",
+    "13.0": "15",
+    "14.0": "16",
+    "15.0": "16",
+    "16.0": "17",
+    "17.0": "17",
+    "18.0": "17",
+    "19.0": "18",
+}
+EXT_DEPS_CONSTRAINTS = {
+    "6.0": "openid:python-openid,ldap:python-ldap",
+    "6.1": "openid:python-openid,ldap:python-ldap",
+    "7.0": "openid:python-openid,ldap:python-ldap",
+    "8.0": "openid:python-openid,ldap:python-ldap,evdev:evdev==1.5.0,usb.core:pyusb",
+    "9.0": "openid:python-openid,ldap:python-ldap",
+    "10.0": "",
+    "11.0": "",
+    "12.0": "",
+    "13.0": "",
+    "14.0": "",
+    "15.0": "",
+    "16.0": "",
+    "17.0": "",
+    "18.0": "",
+    "19.0": "",
+}
+
+
+def _wait_for_odoo(ip_address, port):
+    import requests
+    from requests.exceptions import RequestException
+
+    url = f"http://{ip_address}:{port}"
+    for _ in range(300):
+        try:
+            r = requests.get(url, timeout=5)
+            if r.status_code == 200:
+                break
+        except RequestException:
+            pass
+        time.sleep(2)
+    else:
+        raise TimeoutError("Odoo did not start on time")
 
 
 def pytest_addoption(parser):
@@ -21,10 +67,12 @@ def pytest_addoption(parser):
 def env_info(pytestconfig):
     no_cache = bool(pytestconfig.getoption("no_cache", False))
     odoo_ver = pytestconfig.getoption("odoo_version")
+    odoo_port = '8080' if odoo_ver == "6.0" else '8069'
+
     return {
-        "ip": IP_ADDRESS,
+        "ip": "10.99.2.38",
         "ports": {
-            "odoo": ODOO_PORT,
+            "odoo": odoo_port,
         },
         "options": {
             "no_cache": no_cache,
@@ -34,55 +82,48 @@ def env_info(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def docker_build(env_info):
+def docker_env(env_info):
+    odoo_ver = env_info["options"]["odoo_version"]
+    os.environ["PYTEST_ODOO_VERSION"] = odoo_ver
+    os.environ["PYTEST_PG_VERSION"] = PG_VERSIONS[odoo_ver]
+    # isOdoo Base
     docker = DockerClient()
     docker.build(
         ".",
-        build_args={
-            "ODOO_VERSION": env_info["options"]["odoo_version"],
-        },
-        tags=IMAGE_TAG_NAME,
+        file=f"./{odoo_ver}.Dockerfile",
+        tags=f"{IMAGE_TAG_NAME}-{odoo_ver}",
         cache=not env_info["options"]["no_cache"],
-        target="isodoo-core",
     )
-    return docker
 
+    # isOdoo Runtime
+    docker = DockerClient(
+        compose_files=["./tests/data/project_demo/docker-compose.yaml"],
+        compose_project_name="isodoo-test")
+    docker.compose.build(
+        "odoo",
+        cache=not env_info["options"]["no_cache"],
+        build_args={
+            "ODOO_VERSION": odoo_ver,
+            "EXT_DEPS_CONSTRAINTS": EXT_DEPS_CONSTRAINTS[odoo_ver],
+        },
+    )
+
+    # Up Services
+    docker.compose.up(
+        detach=True,
+        remove_orphans=True,
+    )
+    
+    print("Waiting Odoo...")
+    _wait_for_odoo(env_info["ip"], env_info["ports"]["odoo"])
+    
+    try:
+        yield docker
+    finally:
+        docker.compose.down(remove_orphans=True, volumes=True)
 
 @pytest.fixture(scope="session")
-def docker_odoo(docker_build, env_info):
-    container = None
-    network = None
-    try:
-        if not docker_build.network.exists("pytest-odoo-network"):
-            network = docker_build.network.create(
-                "pytest-odoo-network",
-                driver="bridge",
-                subnet=SUBNET,
-                gateway=GATEWAY,
-            )
-        container = docker_build.container.run(
-            IMAGE_TAG_NAME,
-            networks=["pytest-odoo-network"],
-            ip=IP_ADDRESS,
-            envs={
-                "ODOO_VERSION": env_info["options"]["odoo_version"],
-                "OCONF_log_level": "debug",
-                "OCONF_db_filter": "odoodb$",
-                "OCONF_db_user": "odoo",
-                "OCONF_db_password": "odoo",
-                "OCONF_db_host": "odoo-db",
-                "OCONF_db_name": "odoodb",
-                "OCONF_proxy_mode": "false",
-            },
-            name="isodoo-pytest",
-            remove=True,
-            detach=True,
-        )
-        time.sleep(20)  # Wait for service. FIXME: found a better way...
-        yield container
-    finally:
-        if container:
-            docker_build.container.kill(container)
-            time.sleep(5)  # Wait for docker
-        if network:
-            docker_build.network.remove("pytest-odoo-network")
+def exec_docker(docker_env):
+    def _run(env, args):
+        return docker_env.compose.execute("odoo", ["exec_env", env] + args, tty=False)
+    return _run

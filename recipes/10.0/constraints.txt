@@ -1,0 +1,3 @@
+pytz>=2025.2
+greenlet==0.4.17
+gevent==1.5.0

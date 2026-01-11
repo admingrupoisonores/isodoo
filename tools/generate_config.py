@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright  Alexandre Díaz <dev@redneboa.es>
 import os
 import configparser
 import argparse
@@ -10,7 +11,13 @@ parser.add_argument("output", help="Path to the output .conf file")
 args = parser.parse_args()
 
 config = configparser.ConfigParser()
-config.add_section("options")
+
+if os.path.exists(args.output):
+    config.read(args.output)
+    if not config.has_section("options"):
+        config.add_section("options")
+else:
+    config.add_section("options")
 
 for key, value in os.environ.items():
     if key.startswith("OCONF_"):
