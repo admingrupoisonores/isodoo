@@ -23,27 +23,27 @@ To configure Odoo, simply use environment variables with the prefix ```OCONF_{Pa
 
 | Name | Description |
 |----------------|-------------|
-| WKHTMLTOPDF_PKGS | Paquetes del sistema necesarios para usar WKHTMLTOPDF |
-| ODOO_PKGS | Paquetes del sistema necesarios para usar Odoo  |
-| WKHTMLTOPDF_VERSION | Version de WKHTMLTOPDF a instalar |
-| WKHTMLTOPDF_BASE_DEBIAN_VER | Version de sistema de WKHTMLTOPDF a instalar |
-| USER_ODOO_UID | UID del usuario Odoo |
-| USER_ODOO_GID | GID del usuario Odoo |
-| NVM_VERSION | Version de NVM a usar |
-| NODE_VERSION | Versión de Node a instalar |
-| ODOO_NPM_PKGS | Paqueres de Necesario para usar Odoo |
-| ODOO_PYTHON_VERSION | Version de Python a instalar para Odoo |
-| SYSTEM_PYTHON_VERSION| Version de Python a instalar para el sistema |
+| WKHTMLTOPDF_PKGS | System packages required to use WKHTMLTOPDF |
+| ODOO_PKGS | System packages required to use Odoo |
+| WKHTMLTOPDF_VERSION | Version of WKHTMLTOPDF to install |
+| WKHTMLTOPDF_BASE_DEBIAN_VER | WKHTMLTOPDF system version to install |
+| USER_ODOO_UID | Odoo user ID |
+| USER_ODOO_GID | Odoo user GID |
+| NVM_VERSION | NVM version to use |
+| NODE_VERSION | Node version to install |
+| ODOO_NPM_PKGS | Node packages required to use Odoo |
+| ODOO_PYTHON_VERSION | Python version to install for Odoo |
+| SYSTEM_PYTHON_VERSION| Python version to install for the system |
 
 ### -ONBUILD- Build Arguments
 
 | Name | Description |
 |----------------|-------------|
-| EXT_DEPS_OVERRIDES | The overrides for the module external dependency names (old_name:new_name) separated by commas (Solo es útil si se usa AUTO_DOWNLOAD_DEPENDENCIES) |
-| ODOO_VERSION | La version de Odoo a instalar  |
-| VERIFY_MISSING_MODULES | Indica si se verifica que todos los modulos (y los otros modulos de lo que depende) están disponibles |
-| AUTO_DOWNLOAD_DEPENDENCIES | Indica si se deben descargar todas las dependencias externas de los modulos disponibles |
-| AUTO_FILL_REPOS | Indica si se debe ajustar el repos.yaml a lo que se usa en addons.yaml (solo repositorios OCA) |
+| EXT_DEPS_OVERRIDES | The overrides for the module external dependency names (old_name:new_name) separated by commas (Only useful if AUTO_DOWNLOAD_DEPENDENCIES is used) |
+| ODOO_VERSION | The version of Odoo to install |
+| VERIFY_MISSING_MODULES | Indicates whether all modules (and other modules on which it depends) are available |
+| AUTO_DOWNLOAD_DEPENDENCIES | Indicates whether all external dependencies of the available modules must be downloaded |
+| AUTO_FILL_REPOS | Indicates whether repos.yaml should be adjusted to match what is used in addons.yaml (OCA repositories only) |
 
 ### -ONBUILD- Environment Variables
 
@@ -52,7 +52,7 @@ To configure Odoo, simply use environment variables with the prefix ```OCONF_{Pa
 | GITHUB_TOKEN | User token to use with git-aggregator | No | "" |
 | GIT_DEPTH_NORMAL | The default depth of commits | Yes | 1 |
 | GIT_DEPTH_MERGE | The default depth of commits when cloning with merges | Yes | 500 |
-| EXT_DEPS_OVERRIDES | The overrides for the dependency names (old_name:new_name) separated by commas | No | "" |
+| EXT_DEPS_OVERRIDES | The overrides for the dependency names (old_name:new_name) separated by commas (Only useful if AUTO_DOWNLOAD_DEPENDENCIES is used) | No | "" |
 
 ** Check the Dockerfile for more configuration variables/args.
 
