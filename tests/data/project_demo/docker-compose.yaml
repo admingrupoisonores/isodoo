@@ -35,7 +35,6 @@ services:
       dbnet:
     environment:
       OCONF_log_level: debug
-      OCONF_log_handler: odoo:DEBUG,:DEBUG
       OCONF_db_filter: odoodb$
       OCONF_db_user: odoo
       OCONF_db_password: odoo

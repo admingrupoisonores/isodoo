@@ -100,14 +100,21 @@ class TestIsOdooContainer:
         assert repo_info and "cannot access" not in repo_info
         assert addon_info[1] in repo_info
 
-    def test_odoo_private_addons(self, exec_docker, install_module):
+    def test_odoo_private_addons(self, exec_docker, install_module, env_info):
+        odoo_ver = env_info["options"]["odoo_version"]
+        odoo_major_ver = int(odoo_ver.split(".", 1)[0])
         addons_info = exec_docker("odoo", ["ls", "/var/lib/odoo/private"])
         assert addons_info and "cannot access" not in addons_info
         assert "demo_addon" in addons_info
         addons_info = install_module("invented1234")
         assert "ignored: invented1234" in addons_info
         addons_info = install_module("demo_addon")
-        assert "demo_addon loaded" in addons_info
+        check_msg = (
+            "demo_addon: creating or updating"
+            if odoo_major_ver < 14
+            else "demo_addon loaded"
+        )
+        assert check_msg in addons_info
 
     def test_odoo_config(self, exec_docker):
         config_info = exec_docker("odoo", ["cat", "/etc/odoo/odoo.conf"])
