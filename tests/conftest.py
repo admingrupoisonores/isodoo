@@ -22,23 +22,6 @@ PG_VERSIONS = {
     "18.0": "17",
     "19.0": "18",
 }
-EXT_DEPS_CONSTRAINTS = {
-    "6.0": "openid:python-openid,ldap:python-ldap",
-    "6.1": "openid:python-openid,ldap:python-ldap",
-    "7.0": "openid:python-openid,ldap:python-ldap",
-    "8.0": "openid:python-openid,ldap:python-ldap,evdev:evdev==1.5.0,usb.core:pyusb",
-    "9.0": "openid:python-openid,ldap:python-ldap",
-    "10.0": "",
-    "11.0": "",
-    "12.0": "",
-    "13.0": "",
-    "14.0": "",
-    "15.0": "",
-    "16.0": "",
-    "17.0": "",
-    "18.0": "",
-    "19.0": "",
-}
 
 
 def _wait_for_odoo(ip_address, port):
@@ -105,8 +88,24 @@ def docker_env(env_info):
         cache=not env_info["options"]["no_cache"],
         build_args={
             "ODOO_VERSION": odoo_ver,
-            "EXT_DEPS_CONSTRAINTS": EXT_DEPS_CONSTRAINTS[odoo_ver],
         },
+    )
+
+    # Initialize Database
+    docker.compose.run(
+        "odoo",
+        [
+            "exec_env",
+            "odoo",
+            "odoo",
+            "-c",
+            "/etc/odoo/odoo.conf",
+            "-i",
+            "base",
+            "--test-enable",
+            "--stop-after-init",
+        ],
+        tty=False,
     )
 
     # Up Services
@@ -127,6 +126,26 @@ def docker_env(env_info):
 @pytest.fixture(scope="session")
 def exec_docker(docker_env):
     def _run(env, args):
-        return docker_env.compose.execute("odoo", ["exec_env", env] + args, tty=False)
+        args_str = " ".join(args)
+        exec_cmd = f"exec_env {env} {args_str} 2>&1"
+        return docker_env.compose.execute("odoo", ["sh", "-c", exec_cmd], tty=False)
+
+    return _run
+
+
+@pytest.fixture(scope="session")
+def install_module(exec_docker):
+    def _run(modname):
+        return exec_docker(
+            "odoo",
+            [
+                "odoo",
+                "-c",
+                "/etc/odoo/odoo.conf",
+                "-i",
+                modname,
+                "--stop-after-init",
+            ],
+        )
 
     return _run

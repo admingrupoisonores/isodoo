@@ -56,10 +56,10 @@ USER odoo
 
 
 # Install & activate PyEnv
-ARG ODOO_PYTHON_VERSION=2.7 \
+ARG ODOO_PYTHON_VERSION="2.7" \
     SYSTEM_PYTHON_VERSION=3
-ARG PYTHON_SYSTEM_BIN_NAME=python${SYSTEM_PYTHON_VERSION} \
-    PYTHON_ODOO_BIN_NAME=python${ODOO_PYTHON_VERSION}
+ARG PYTHON_SYSTEM_BIN_NAME="python${SYSTEM_PYTHON_VERSION}" \
+    PYTHON_ODOO_BIN_NAME="python${ODOO_PYTHON_VERSION}"
 ENV PATH="/home/odoo/.pyenv/bin:/home/odoo/.pyenv/shims:$PATH" \
     PYENV_ROOT="/home/odoo/.pyenv" \
     PYENV_VIRTUALENV_DISABLE_PROMPT=1
@@ -90,7 +90,7 @@ RUN set -eux; \
 ### ODOO PYTHON ENV
 WORKDIR /opt/odoo
 
-ARG ODOO_EXTRA_PIP_PKGS="pyOpenSSL==17.5.0"
+ARG ODOO_EXTRA_PIP_PKGS="pyinotify"
 
 # Install Odoo PIP & Extra dependencies
 RUN set -eux; \
@@ -123,7 +123,7 @@ RUN set -eux; \
 # System Post-Configurations
 USER root
 
-COPY recipes/6.1/requirements.txt /opt/odoo/requirements.txt
+COPY --chown=odoo:odoo recipes/6.1/requirements.txt /opt/odoo/requirements.txt
 COPY docker-entrypoint.sh /usr/local/sbin/
 COPY tools/exec_env.sh /usr/local/sbin/exec_env
 COPY tools/generate_config.py /usr/local/sbin/generate_config
@@ -148,17 +148,17 @@ USER odoo
 
 
 # Install Odoo + Extras
-ONBUILD ARG EXT_DEPS_CONSTRAINTS='' \
-            ODOO_VERSION=6.1 \
+ONBUILD ARG EXT_DEPS_OVERRIDES='' \
+            ODOO_VERSION="6.1" \
             VERIFY_MISSING_MODULES=true \
             AUTO_DOWNLOAD_DEPENDENCIES=true \
             AUTO_FILL_REPOS=true
-ONBUILD ENV LC_ALL=C.UTF-8 \
-            LANG=C.UTF-8 \
+ONBUILD ENV LC_ALL="C.UTF-8" \
+            LANG="C.UTF-8" \
             GIT_DEPTH_NORMAL=1 \
             GIT_DEPTH_MERGE=500 \
-            EXT_DEPS_CONSTRAINTS=${EXT_DEPS_CONSTRAINTS} \
-            ODOO_VERSION=${ODOO_VERSION} \
+            EXT_DEPS_OVERRIDES="openid:python-openid,ldap:python-ldap,${EXT_DEPS_OVERRIDES}" \
+            ODOO_VERSION="${ODOO_VERSION}" \
             OCONF_addons_path="/var/lib/odoo/core,/var/lib/odoo/extra"
 
 ONBUILD COPY --from=deps --chown=odoo:odoo apt.txt /opt/odoo/apt.txt
@@ -186,17 +186,18 @@ ONBUILD RUN set -ex; \
             chmod +x /opt/odoo/odoo/openerp-server; \
             create_addons_symlinks; \
             [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \
+            [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
             deactivate;
 
 ONBUILD USER root
 
 ONBUILD RUN set -ex; \
-    [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
     apt-get update; \
     xargs apt-get install -y --no-install-recommends < /opt/odoo/apt.txt; \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
     apt-get clean; \
-    rm -rf /var/lib/apt/lists/*;
+    rm -rf /var/lib/apt/lists/*; \
+    rm -rf /tmp/*;
 
 ONBUILD USER odoo
 

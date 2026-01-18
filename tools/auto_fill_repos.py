@@ -30,7 +30,6 @@ def main():
 
     if added:
         try:
-            print(repos)
             REPOS_YAML_FILE.write_text(
                 yaml.dump(repos, default_flow_style=False, indent=2, sort_keys=False),
                 encoding="utf-8",

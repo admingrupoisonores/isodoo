@@ -37,7 +37,7 @@ RUN set -eux; \
 
 
 # Install WKHTMLTOX
-ARG WKHTMLTOPDF_VERSION=0.12.1.4-2 \
+ARG WKHTMLTOPDF_VERSION="0.12.1.4-2" \
     WKHTMLTOPDF_BASE_DEBIAN_VER=buster
 
 RUN set -eux; \
@@ -70,8 +70,8 @@ USER odoo
 
 
 # Install NodeJS & Depedencies
-ARG NVM_VERSION=v0.40.3 \
-    NODE_VERSION=0.12.18 \
+ARG NVM_VERSION="v0.40.3" \
+    NODE_VERSION="0.12.18" \
     ODOO_NPM_PKGS="rtlcss less@1.7.5 less-plugin-clean-css"
 
 # hadolint ignore=SC2086
@@ -84,10 +84,10 @@ RUN set -ex; \
 
 
 # Install & activate PyEnv
-ARG ODOO_PYTHON_VERSION=2.7 \
+ARG ODOO_PYTHON_VERSION="2.7" \
     SYSTEM_PYTHON_VERSION=3
-ARG PYTHON_SYSTEM_BIN_NAME=python${SYSTEM_PYTHON_VERSION} \
-    PYTHON_ODOO_BIN_NAME=python${ODOO_PYTHON_VERSION}
+ARG PYTHON_SYSTEM_BIN_NAME="python${SYSTEM_PYTHON_VERSION}" \
+    PYTHON_ODOO_BIN_NAME="python${ODOO_PYTHON_VERSION}"
 ENV PATH="/home/odoo/.pyenv/bin:/home/odoo/.pyenv/shims:$PATH" \
     PYENV_ROOT="/home/odoo/.pyenv" \
     PYENV_VIRTUALENV_DISABLE_PROMPT=1
@@ -118,7 +118,7 @@ RUN set -eux; \
 ### ODOO PYTHON ENV
 WORKDIR /opt/odoo
 
-ARG ODOO_EXTRA_PIP_PKGS="pyinotify pyOpenSSL"
+ARG ODOO_EXTRA_PIP_PKGS="pyinotify"
 
 # Install Odoo PIP & Extra dependencies
 RUN set -eux; \
@@ -137,7 +137,7 @@ RUN set -eux; \
 # System Post-Configurations
 USER root
 
-COPY recipes/8.0/constraints.txt /opt/odoo/constraints.txt
+COPY --chown=odoo:odoo recipes/8.0/constraints.txt /opt/odoo/constraints.txt
 COPY docker-entrypoint.sh /usr/local/sbin/
 COPY tools/exec_env.sh /usr/local/sbin/exec_env
 COPY tools/generate_config.py /usr/local/sbin/generate_config
@@ -168,17 +168,17 @@ RUN set -ex; \
 
 
 # Install Odoo + Extras
-ONBUILD ARG EXT_DEPS_CONSTRAINTS='' \
-            ODOO_VERSION=8.0 \
+ONBUILD ARG EXT_DEPS_OVERRIDES='' \
+            ODOO_VERSION="8.0" \
             VERIFY_MISSING_MODULES=true \
             AUTO_DOWNLOAD_DEPENDENCIES=true \
             AUTO_FILL_REPOS=true
-ONBUILD ENV LC_ALL=C.UTF-8 \
-            LANG=C.UTF-8 \
+ONBUILD ENV LC_ALL="C.UTF-8" \
+            LANG="C.UTF-8" \
             GIT_DEPTH_NORMAL=1 \
             GIT_DEPTH_MERGE=500 \
-            EXT_DEPS_CONSTRAINTS=${EXT_DEPS_CONSTRAINTS} \
-            ODOO_VERSION=${ODOO_VERSION} \
+            EXT_DEPS_OVERRIDES="openid:python-openid,ldap:python-ldap,evdev:evdev==1.5.0,usb.core:pyusb,${EXT_DEPS_OVERRIDES}" \
+            ODOO_VERSION="${ODOO_VERSION}" \
             OCONF_addons_path="/var/lib/odoo/core,/var/lib/odoo/extra"
 
 ONBUILD COPY --from=deps --chown=odoo:odoo apt.txt /opt/odoo/apt.txt
@@ -198,6 +198,7 @@ ONBUILD RUN set -ex; \
             chmod +x /opt/odoo/odoo/odoo.py /opt/odoo/odoo/openerp-server /opt/odoo/odoo/openerp-gevent; \
             create_addons_symlinks; \
             [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \
+            [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
             deactivate; \
             . ~/.nvm/nvm.sh; \
             xargs npm install -g < /opt/odoo/npm.txt;
@@ -205,12 +206,12 @@ ONBUILD RUN set -ex; \
 ONBUILD USER root
 
 ONBUILD RUN set -ex; \
-    [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
     apt-get update; \
     xargs apt-get install -y --no-install-recommends < /opt/odoo/apt.txt; \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
     apt-get clean; \
-    rm -rf /var/lib/apt/lists/*;
+    rm -rf /var/lib/apt/lists/*; \
+    rm -rf /tmp/*;
 
 ONBUILD USER odoo
 

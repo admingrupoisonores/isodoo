@@ -91,10 +91,10 @@ if __name__ == "__main__":
             print(f"Warning: Path not found: {base_path}", file=sys.stderr)
 
     replacements = {}
-    constraint_str = os.environ.get("EXT_DEPS_CONSTRAINTS", "")
-    print("Deps. Contraints. Env:", constraint_str)
-    if constraint_str.strip():
-        for part in constraint_str.split(","):
+    overrides_str = os.environ.get("EXT_DEPS_OVERRIDES", "")
+    print("Deps. Contraints. Env:", overrides_str)
+    if overrides_str.strip():
+        for part in overrides_str.split(","):
             if ":" in part:
                 old, new = part.strip().split(":", 1)
                 if old:

@@ -1,0 +1,2 @@
+reporting-engine:
+  - sql_export_excel

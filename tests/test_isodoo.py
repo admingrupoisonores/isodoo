@@ -1,20 +1,37 @@
 # Copyright  Alexandre Díaz <dev@redneboa.es>
 import requests
 
+ISODOO_UV_MIN_VERSION = 14
 OLDER_VERSIONS = ("6.0", "6.1", "7.0")
-OPENERP_VERSIONS = ("6.0", "6.1", "7.0", "8.0", "9.0")
-ODOO_VERSIONS = (
-    "10.0",
-    "11.0",
-    "12.0",
-    "13.0",
-    "14.0",
-    "15.0",
-    "16.0",
-    "17.0",
-    "18.0",
-    "19.0",
-)
+# <odoo version>: (<repo name>, <module_name>, (<list pip deps>, <list apt deps>))
+# See data/project_demo/v<odoo version>/addons/addons.yaml for more details
+EXTRA_ADDONS = {
+    "6.0": ("l10n-spain", "city", None),
+    "6.1": ("reporting-engine", "report_xls", (("xlwt",), None)),
+    "7.0": ("reporting-engine", "report_xls", (("xlwt",), None)),
+    "8.0": ("reporting-engine", "report_xlsx", (("xlsxwriter",), None)),
+    "9.0": ("reporting-engine", "report_xlsx", (("xlsxwriter",), None)),
+    "10.0": ("reporting-engine", "report_xlsx", (("xlsxwriter",), None)),
+    "11.0": ("reporting-engine", "report_xlsx", (("xlsxwriter",), None)),
+    "12.0": ("reporting-engine", "report_xlsx", (("xlsxwriter",), None)),
+    "13.0": (
+        "reporting-engine",
+        "report_xlsx_boilerplate",
+        (
+            (
+                "xlsxwriter",
+                "openpyxl",
+            ),
+            None,
+        ),
+    ),
+    "14.0": ("reporting-engine", "report_fillpdf", (("fdfgen",), ("pdftk",))),
+    "15.0": ("reporting-engine", "report_xlsx", (("xlsxwriter", "xlrd"), None)),
+    "16.0": ("reporting-engine", "sql_export_excel", (("openpyxl",), None)),
+    "17.0": ("reporting-engine", "sql_export_excel", (("openpyxl",), None)),
+    "18.0": ("reporting-engine", "sql_export_excel", (("openpyxl",), None)),
+    "19.0": ("reporting-engine", "report_xlsx", (("xlsxwriter", "xlrd"), None)),
+}
 
 
 class TestIsOdooContainer:
@@ -22,15 +39,25 @@ class TestIsOdooContainer:
         version = exec_docker("odoo", ["odoo", "--version"])
         assert env_info["options"]["odoo_version"] in version
 
-    def test_odoo_pip_dependencies(self, exec_docker):
+    def test_odoo_pip_dependencies(self, exec_docker, env_info):
+        odoo_ver = env_info["options"]["odoo_version"]
+        odoo_major_ver = int(odoo_ver.split(".", 1)[0])
         pip_info = exec_docker("odoo", ["cat", "/opt/odoo/pip.txt"])
         assert "test-pip-install" in pip_info
-        pip_info = exec_docker("odoo", ["pip", "show", "pip"])
-        assert "not found" not in pip_info
-        pip_info = exec_docker("odoo", ["pip", "show", "test-pip-install"])
-        assert "not found" not in pip_info
-        pip_info = exec_docker("odoo", ["pip", "show", "invented1234"])
-        assert not pip_info
+        if odoo_major_ver < ISODOO_UV_MIN_VERSION:
+            pip_info = exec_docker("odoo", ["pip", "show", "pip"])
+            assert pip_info and "not found" not in pip_info
+            pip_info = exec_docker("odoo", ["pip", "show", "test-pip-install"])
+            assert pip_info and "not found" not in pip_info
+            pip_info = exec_docker("odoo", ["pip", "show", "invented1234"])
+            assert "not found" in pip_info
+        else:
+            pip_info = exec_docker("odoo", ["uv", "pip", "show", "pytz"])
+            assert pip_info and "not found" not in pip_info
+            pip_info = exec_docker("odoo", ["uv", "pip", "show", "test-pip-install"])
+            assert pip_info and "not found" not in pip_info
+            pip_info = exec_docker("odoo", ["uv", "pip", "show", "invented1234"])
+            assert "not found" in pip_info
 
     def test_odoo_apt_dependencies(self, exec_docker):
         apt_info = exec_docker("odoo", ["cat", "/opt/odoo/apt.txt"])
@@ -44,7 +71,7 @@ class TestIsOdooContainer:
         apt_info = exec_docker(
             "odoo", ["dpkg-query", "-W", "-f='${Status}\n'", "invented1234"]
         )
-        assert not apt_info
+        assert "no packages found" in apt_info
 
     def test_odoo_npm_dependencies(self, exec_docker, env_info):
         odoo_ver = env_info["options"]["odoo_version"]
@@ -55,52 +82,32 @@ class TestIsOdooContainer:
         npm_info = exec_docker("odoo", ["npm", "ls", "-g"])
         assert "npm" in npm_info
         assert "mirlo" in npm_info
-        assert "invented1234" not in npm_info
+        assert npm_info and "invented1234" not in npm_info
 
     def test_odoo_repos(self, exec_docker):
         repo_info = exec_docker("odoo", ["cat", "/opt/odoo/repos.yaml"])
         assert "odoo" in repo_info
         repo_info = exec_docker("odoo", ["ls", "/var/lib/odoo/core"])
-        assert "cannot access" not in repo_info
+        assert repo_info and "cannot access" not in repo_info
         assert "account" in repo_info
 
     def test_odoo_extra_addons(self, exec_docker, env_info):
         odoo_ver = env_info["options"]["odoo_version"]
-        if odoo_ver == "6.0":
-            repo_info = exec_docker("odoo", ["cat", "/opt/odoo/repos.yaml"])
-            assert "l10n-spain" in repo_info
-            repo_info = exec_docker("odoo", ["ls", "/var/lib/odoo/extra"])
-            assert "cannot access" not in repo_info
-            assert "city" in repo_info
-        else:
-            repo_info = exec_docker("odoo", ["cat", "/opt/odoo/repos.yaml"])
-            assert "reporting-engine" in repo_info
-            repo_info = exec_docker("odoo", ["ls", "/var/lib/odoo/extra"])
-            assert "cannot access" not in repo_info
-            assert "report_xls" in repo_info
+        addon_info = EXTRA_ADDONS[odoo_ver]
+        repo_info = exec_docker("odoo", ["cat", "/opt/odoo/repos.yaml"])
+        assert addon_info[0] in repo_info
+        repo_info = exec_docker("odoo", ["ls", "/var/lib/odoo/extra"])
+        assert repo_info and "cannot access" not in repo_info
+        assert addon_info[1] in repo_info
 
-    def test_odoo_private_addons(self, exec_docker):
+    def test_odoo_private_addons(self, exec_docker, install_module):
         addons_info = exec_docker("odoo", ["ls", "/var/lib/odoo/private"])
-        assert "cannot access" not in addons_info
+        assert addons_info and "cannot access" not in addons_info
         assert "demo_addon" in addons_info
-
-        def install_module(modname):
-            return exec_docker(
-                "odoo",
-                [
-                    "odoo",
-                    "-c",
-                    "/etc/odoo/odoo.conf",
-                    "-i",
-                    modname,
-                    "--stop-after-init",
-                ],
-            )
-
         addons_info = install_module("invented1234")
         assert "ignored: invented1234" in addons_info
         addons_info = install_module("demo_addon")
-        assert "demo_addon: creating or updating database tables" in addons_info
+        assert "demo_addon loaded" in addons_info
 
     def test_odoo_config(self, exec_docker):
         config_info = exec_docker("odoo", ["cat", "/etc/odoo/odoo.conf"])
@@ -108,12 +115,32 @@ class TestIsOdooContainer:
 
     def test_auto_download(self, exec_docker, env_info):
         odoo_ver = env_info["options"]["odoo_version"]
-        if odoo_ver == "6.0":
+        addon_info = EXTRA_ADDONS[odoo_ver]
+        if not addon_info[2]:
             return None
-        pip_info = exec_docker("odoo", ["cat", "/opt/odoo/pip.txt"])
-        assert "xlwt" in pip_info
-        pip_info = exec_docker("odoo", ["pip", "show", "xlwt"])
-        assert "not found" not in pip_info
+        odoo_major_ver = int(odoo_ver.split(".", 1)[0])
+        # pyhton
+        cat_info = exec_docker("odoo", ["cat", "/opt/odoo/pip.txt"])
+        pip_deps = addon_info[2][0]
+        if pip_deps:
+            for pip_dep in pip_deps:
+                assert pip_dep in cat_info
+                if odoo_major_ver < ISODOO_UV_MIN_VERSION:
+                    pip_info = exec_docker("odoo", ["pip", "show", pip_dep])
+                    assert pip_info and "not found" not in pip_info
+                else:
+                    pip_info = exec_docker("odoo", ["uv", "pip", "show", pip_dep])
+                    assert pip_info and "not found" not in pip_info
+        # apt
+        cat_info = exec_docker("odoo", ["cat", "/opt/odoo/apt.txt"])
+        apt_deps = addon_info[2][1]
+        if apt_deps:
+            for apt_dep in apt_deps:
+                assert apt_dep in cat_info
+                apt_info = exec_docker(
+                    "odoo", ["dpkg-query", "-W", "-f='${Status}\n'", apt_dep]
+                )
+                assert "ok installed" in apt_info
 
     def test_simple_http(self, docker_env, env_info):
         odoo_ver = env_info["options"]["odoo_version"]

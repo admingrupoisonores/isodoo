@@ -28,6 +28,7 @@ if [ -n "$USER_ODOO_UID" ] && [ -n "$USER_ODOO_GID" ]; then
     usermod -u "$USER_ODOO_UID" -g "$USER_ODOO_GID" odoo
     chown -R odoo:odoo /home/odoo /opt/odoo /etc/odoo /var/lib/odoo
 fi
+
 echo "[entrypoint] Generating Odoo configuration..."
 generate_config /etc/odoo/odoo.conf
 echo "[entrypoint] Waiting for postgres database..."
@@ -43,12 +44,10 @@ INFO_PYTHON_VERSION=$(python --version 2>&1)
 echo "[entrypoint] - Python version: $INFO_PYTHON_VERSION"
 echo "[entrypoint] ==== END ODOO INFO ===="
 
-# Support OpenERP Web 6.x
-if [ -f /etc/odoo/openerp-web.cfg ]; then
-    echo "[entrypoint] Starting Odoo Server..."
-    odoo --config /etc/odoo/odoo.conf &
+# Support OpenERP Web 6.0
+if [ -f /etc/odoo/openerp-web.cfg ] && [ "$1" == "odoo" ]; then
     echo "[entrypoint] Starting Odoo Web..."
-else
-    echo "[entrypoint] Starting Odoo..."
+    openerp-web -c /etc/odoo/openerp-web.cfg &
 fi
+echo "[entrypoint] Starting..."
 exec "$@"
