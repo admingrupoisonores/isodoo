@@ -13,4 +13,4 @@ repos:
   rev: v2.14.0
   hooks:
     - id: hadolint
-      entry: poetry run hadolint
+      entry: uv run hadolint
