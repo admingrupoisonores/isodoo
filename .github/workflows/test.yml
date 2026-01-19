@@ -39,7 +39,7 @@ jobs:
           poetry install
       - uses: pre-commit/action@v3.0.1
 
-  isodoo:
+  pytest:
     strategy:
       matrix:
         odoo_version:
