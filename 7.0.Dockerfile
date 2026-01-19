@@ -73,7 +73,7 @@ USER odoo
 
 # Install & activate PyEnv
 ARG ODOO_PYTHON_VERSION="2.7" \
-    SYSTEM_PYTHON_VERSION=3
+    SYSTEM_PYTHON_VERSION="3.13"
 ARG PYTHON_SYSTEM_BIN_NAME="python${SYSTEM_PYTHON_VERSION}" \
     PYTHON_ODOO_BIN_NAME="python${ODOO_PYTHON_VERSION}"
 ENV PATH="/home/odoo/.pyenv/bin:/home/odoo/.pyenv/shims:$PATH" \
