@@ -1,19 +1,25 @@
-[tool.poetry]
+[project]
 name = "isodoo"
 version = "0.1.0"
 description = ""
-authors = ["Alexandre D. Díaz <dev@redneboa.es>"]
+authors = [{ name = "Alexandre D. Díaz", email = "dev@redneboa.es" }]
+requires-python = ">=3.13,<4"
 readme = "README.md"
-package-mode = false
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "python-on-whales>=0.78.0,<0.79",
+    "pytest>=8.4.2,<9",
+    "requests>=2.32.5,<3",
+    "hadolint-bin>=2.12.0,<3",
+]
 
-[tool.poetry.dependencies]
-python = "^3.13"
-python-on-whales = "^0.78.0"
-pytest = "^8.4.2"
-requests = "^2.32.5"
-hadolint-bin = "^2.12.0"
-
+[tool.uv]
+package = false
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
