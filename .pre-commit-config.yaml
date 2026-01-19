@@ -9,8 +9,12 @@ repos:
   rev: 25.9.0
   hooks:
   - id: black
-- repo: https://github.com/hadolint/hadolint
-  rev: v2.14.0
+- repo: local
   hooks:
     - id: hadolint
-      entry: uv run hadolint
+      name: hadolint (via uv + hadolint-py)
+      entry: uv run --with git+https://github.com/AleksaC/hadolint-py.git@v2.14.0 hadolint
+      args: [--verbose]
+      language: system
+      types: [dockerfile]
+      pass_filenames: true
