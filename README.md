@@ -17,9 +17,9 @@ A lightweight image for running Odoo from 6.0 to the moon! Strongly inspired by 
 
 ## :page_facing_up: Documentation
 
-To configure Odoo, simply use environment variables with the prefix ```OCONF_{Param Name}```. Example for changing workers: ```OCONF_workers=4```.
+To configure Odoo, simply use environment variables with the prefix ```OCONF__{section}__{Param Name}```. Example for changing workers: ```OCONF__options__workers=4```.
 
-** On Odoo 6.x you can use environment variables with the prefix ```OWCONF_{Param Name}``` (taking into account that the underscores will be replaced by dots).
+** On Odoo 6.x you can use environment variables with the prefix ```OWCONF__{section}__{Param Name}``` (taking into account that the underscores will be replaced by dots).
 
 ### Build Arguments
 
@@ -75,7 +75,7 @@ ARG ODOO_VERSION
 FROM isodoo:${ODOO_VERSION} AS isodoo-runtime
 FROM isodoo-runtime AS isodoo-runtime-private
 COPY --from=private --chown=odoo:odoo / /var/lib/odoo/private
-ENV OCONF_addons_path="${OCONF_addons_path},/var/lib/odoo/private"
+ENV OCONF__options__addons_path="${OCONF__options__addons_path},/var/lib/odoo/private"
 ```
 
 ### Docker Compose
@@ -99,13 +99,13 @@ services:
       - frontend
       - dbnet
     environment:
-      OCONF_log_level: debug
-      OCONF_db_filter: odoodb$
-      OCONF_db_user: odoo
-      OCONF_db_password: odoo
-      OCONF_db_host: odoo-db
-      OCONF_db_name: odoodb
-      OCONF_proxy_mode: false
+      OCONF__options__log_level: debug
+      OCONF__options__db_filter: odoodb$
+      OCONF__options__db_user: odoo
+      OCONF__options__db_password: odoo
+      OCONF__options__db_host: odoo-db
+      OCONF__options__db_name: odoodb
+      OCONF__options__proxy_mode: false
     hostname: odoo
 
   db:

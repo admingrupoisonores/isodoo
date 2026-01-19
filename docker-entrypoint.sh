@@ -32,7 +32,7 @@ fi
 echo "[entrypoint] Generating Odoo configuration..."
 generate_config /etc/odoo/odoo.conf
 echo "[entrypoint] Waiting for postgres database..."
-wait_for_psql --db_host="$OCONF_db_host" --db_port="${OCONF_db_port:-5432}" --db_user="${OCONF_db_user}" --db_password="${OCONF_db_password}" --timeout=30
+wait_for_psql --db_host="$OCONF__options__db_host" --db_port="${OCONF__options__db_port:-5432}" --db_user="${OCONF__options__db_user}" --db_password="${OCONF__options__db_password}" --timeout=30
 deactivate
 
 # Use odoo python environment

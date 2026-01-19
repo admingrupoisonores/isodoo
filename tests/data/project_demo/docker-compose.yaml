@@ -34,14 +34,14 @@ services:
         ipv4_address: 10.99.2.38
       dbnet:
     environment:
-      OCONF_log_level: debug
-      OCONF_db_filter: odoodb$
-      OCONF_db_user: odoo
-      OCONF_db_password: odoo
-      OCONF_db_host: odoo-db
-      OCONF_db_name: odoodb
-      OCONF_proxy_mode: false
-      OCONF_workers: 0
+      OCONF__options__log_level: debug
+      OCONF__options__db_filter: odoodb$
+      OCONF__options__db_user: odoo
+      OCONF__options__db_password: odoo
+      OCONF__options__db_host: odoo-db
+      OCONF__options__db_name: odoodb
+      OCONF__options__proxy_mode: false
+      OCONF__options__workers: 0
     hostname: odoo
 
 

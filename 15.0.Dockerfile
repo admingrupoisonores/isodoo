@@ -164,7 +164,7 @@ ONBUILD ENV LC_ALL="C.UTF-8" \
             GIT_DEPTH_MERGE=500 \
             EXT_DEPS_OVERRIDES="ldap:python-ldap,${EXT_DEPS_OVERRIDES}" \
             ODOO_VERSION="${ODOO_VERSION}" \
-            OCONF_addons_path="/var/lib/odoo/core,/var/lib/odoo/extra"
+            OCONF__options__addons_path="/var/lib/odoo/core,/var/lib/odoo/extra"
 
 ONBUILD COPY --from=deps --chown=odoo:odoo apt.txt /opt/odoo/apt.txt
 ONBUILD COPY --from=deps --chown=odoo:odoo pip.txt /opt/odoo/pip.txt
