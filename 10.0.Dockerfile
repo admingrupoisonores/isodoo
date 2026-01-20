@@ -194,17 +194,17 @@ ONBUILD RUN set -ex; \
             [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
             deactivate; \
             . ~/.nvm/nvm.sh; \
-            xargs npm install -g < /opt/odoo/npm.txt;
+            xargs -r npm install -g < /opt/odoo/npm.txt;
 
 ONBUILD USER root
 
 ONBUILD RUN set -ex; \
-    apt-get update; \
-    xargs apt-get install -y --no-install-recommends < /opt/odoo/apt.txt; \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*; \
-    rm -rf /tmp/*;
+            apt-get update; \
+            xargs -r apt-get install -y --no-install-recommends < /opt/odoo/apt.txt; \
+            apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+            apt-get clean; \
+            rm -rf /var/lib/apt/lists/*; \
+            rm -rf /tmp/*;
 
 ONBUILD USER odoo
 
@@ -212,23 +212,23 @@ ONBUILD WORKDIR /opt/odoo/odoo
 
 # hadolint ignore=DL3042
 ONBUILD RUN set -ex; \
-    . ../.venv/bin/activate; \
-    printf '#!/bin/bash\n/opt/odoo/odoo/odoo-bin "$@"' > ../.venv/bin/odoo; \
-    chmod +x ../.venv/bin/odoo; \
-    mv /opt/odoo/constraints.txt .;\
-    pip install --no-binary psycopg2 -r requirements.txt -c constraints.txt; \
-    pip install -r /opt/odoo/pip.txt; \
-    # Cleanup
-    pip cache purge; \
-    find .. -maxdepth 3 -name "build" -type d -exec rm -rf {} +; \
-    find .. -name "*.egg-info" -type d -exec rm -rf {} +; \
-    find .. -name "*.pyc" -type f -delete; \
-    rm -rf /tmp/*; \
-    # Post-configurations
-    python -m compileall /var/lib/odoo/; \
-    # Ensure all is working
-    odoo --version; \
-    deactivate;
+            . ../.venv/bin/activate; \
+            printf '#!/bin/bash\n/opt/odoo/odoo/odoo-bin "$@"' > ../.venv/bin/odoo; \
+            chmod +x ../.venv/bin/odoo; \
+            mv /opt/odoo/constraints.txt .;\
+            pip install --no-binary psycopg2 -r requirements.txt -c constraints.txt; \
+            pip install -r /opt/odoo/pip.txt; \
+            # Cleanup
+            pip cache purge; \
+            find .. -maxdepth 3 -name "build" -type d -exec rm -rf {} +; \
+            find .. -name "*.egg-info" -type d -exec rm -rf {} +; \
+            find .. -name "*.pyc" -type f -delete; \
+            rm -rf /tmp/*; \
+            # Post-configurations
+            python -m compileall /var/lib/odoo/; \
+            # Ensure all is working
+            odoo --version; \
+            deactivate;
 
 
 ONBUILD WORKDIR /opt/odoo

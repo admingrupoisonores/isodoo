@@ -72,7 +72,7 @@ To configure Odoo, simply use environment variables with the prefix ```OCONF__{s
 ### Custom Dockerfile
 ```Dockerfile
 ARG ODOO_VERSION
-FROM isodoo:${ODOO_VERSION} AS isodoo-runtime
+FROM ghcr.io/grupoisonor/isodoo:${ODOO_VERSION} AS isodoo-runtime
 FROM isodoo-runtime AS isodoo-runtime-private
 COPY --from=private --chown=odoo:odoo / /var/lib/odoo/private
 ENV OCONF__options__addons_path="${OCONF__options__addons_path},/var/lib/odoo/private"

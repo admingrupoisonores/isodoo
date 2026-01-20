@@ -160,28 +160,28 @@ ONBUILD USER odoo
 ONBUILD WORKDIR /opt/odoo
 
 ONBUILD RUN set -ex; \
-    . ~/.venv/bin/activate; \
-    [ "$AUTO_FILL_REPOS" = true ] && auto_fill_repos; \
-    gitaggregate -c repos.yaml --expand-env; \
-    chmod +x /opt/odoo/odoo/bin/openerp-server.py; \
-    curl -L -o oweb.tar.gz "https://nightly.odoo.com/old/openerp-${ODOO_VERSION}/nightly/openerp-web-${ODOO_WEB_VERSION}-${ODOO_WEB_VERSION_PACKAGE}.tar.gz"; \
-    tar -xvf oweb.tar.gz; \
-    chmod +x "/opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py"; \
-    rm -f oweb.tar.gz; \
-    create_addons_symlinks; \
-    [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \
-    [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
-    deactivate;
+            . ~/.venv/bin/activate; \
+            [ "$AUTO_FILL_REPOS" = true ] && auto_fill_repos; \
+            gitaggregate -c repos.yaml --expand-env; \
+            chmod +x /opt/odoo/odoo/bin/openerp-server.py; \
+            curl -L -o oweb.tar.gz "https://nightly.odoo.com/old/openerp-${ODOO_VERSION}/nightly/openerp-web-${ODOO_WEB_VERSION}-${ODOO_WEB_VERSION_PACKAGE}.tar.gz"; \
+            tar -xvf oweb.tar.gz; \
+            chmod +x "/opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py"; \
+            rm -f oweb.tar.gz; \
+            create_addons_symlinks; \
+            [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \
+            [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
+            deactivate;
 
 ONBUILD USER root
 
 ONBUILD RUN set -ex; \
-    apt-get update; \
-    xargs apt-get install -y --no-install-recommends < /opt/odoo/apt.txt; \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*; \
-    rm -rf /tmp/*;
+            apt-get update; \
+            xargs -r apt-get install -y --no-install-recommends < /opt/odoo/apt.txt; \
+            apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+            apt-get clean; \
+            rm -rf /var/lib/apt/lists/*; \
+            rm -rf /tmp/*;
 
 ONBUILD USER odoo
 
@@ -189,34 +189,34 @@ ONBUILD WORKDIR /opt/odoo/odoo
 
 # hadolint ignore=SC2086,DL3042
 ONBUILD RUN set -ex; \
-    . ../.venv/bin/activate; \
-    printf '#!/bin/bash\n/opt/odoo/odoo/bin/openerp-server.py "$@"' > ../.venv/bin/odoo; \
-    chmod +x ${VIRTUAL_ENV}/bin/odoo; \
-    mv /opt/odoo/requirements.txt .;\
-    pip install --no-binary psycopg2 -r requirements.txt; \
-    pip install -r /opt/odoo/pip.txt; \
-    pip cache purge; \
-    find .. -maxdepth 3 -name "build" -type d -exec rm -rf {} +; \
-    find .. -name "*.egg-info" -type d -exec rm -rf {} +; \
-    find .. -name "*.pyc" -type f -delete; \
-    rm -rf /tmp/*; \
-    # Post-configurations
-    python -m compileall /var/lib/odoo/; \
-    # Ensure all is working
-    odoo --version; \
-    deactivate;
+            . ../.venv/bin/activate; \
+            printf '#!/bin/bash\n/opt/odoo/odoo/bin/openerp-server.py "$@"' > ../.venv/bin/odoo; \
+            chmod +x ${VIRTUAL_ENV}/bin/odoo; \
+            mv /opt/odoo/requirements.txt .;\
+            pip install --no-binary psycopg2 -r requirements.txt; \
+            pip install -r /opt/odoo/pip.txt; \
+            pip cache purge; \
+            find .. -maxdepth 3 -name "build" -type d -exec rm -rf {} +; \
+            find .. -name "*.egg-info" -type d -exec rm -rf {} +; \
+            find .. -name "*.pyc" -type f -delete; \
+            rm -rf /tmp/*; \
+            # Post-configurations
+            python -m compileall /var/lib/odoo/; \
+            # Ensure all is working
+            odoo --version; \
+            deactivate;
 
 ONBUILD WORKDIR /opt/odoo/openerp-web-$ODOO_WEB_VERSION
 
 # hadolint ignore=SC2086
 ONBUILD RUN set -ex; \
-    . ../.venv/bin/activate; \
-    cat doc/openerp-web.cfg > /etc/odoo/openerp-web.cfg; \
-    printf "#!/bin/bash\n/opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py \"\$@\"\n" > ${VIRTUAL_ENV}/bin/openerp-web; \
-    chmod +x ${VIRTUAL_ENV}/bin/openerp-web; \
-    # Ensure all is working
-    openerp-web --version; \
-    deactivate;
+            . ../.venv/bin/activate; \
+            cat doc/openerp-web.cfg > /etc/odoo/openerp-web.cfg; \
+            printf "#!/bin/bash\n/opt/odoo/openerp-web-${ODOO_WEB_VERSION}/openerp-web.py \"\$@\"\n" > ${VIRTUAL_ENV}/bin/openerp-web; \
+            chmod +x ${VIRTUAL_ENV}/bin/openerp-web; \
+            # Ensure all is working
+            openerp-web --version; \
+            deactivate;
 
 
 ONBUILD WORKDIR /opt/odoo

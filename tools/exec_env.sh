@@ -27,7 +27,7 @@ if [ ! -f "$VENV_PATH" ]; then
     exit 1
 fi
 
-[ -f "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
+[ -f "/home/odoo/.nvm/nvm.sh" ] && . "/home/odoo/.nvm/nvm.sh"
 source "$VENV_PATH"
 
 shift

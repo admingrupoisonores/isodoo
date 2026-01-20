@@ -185,16 +185,16 @@ ONBUILD USER odoo
 ONBUILD WORKDIR /opt/odoo
 
 ONBUILD RUN set -ex; \
-            . ~/.venv/bin/activate; \
-            [ "$AUTO_FILL_REPOS" = true ] && auto_fill_repos; \
-            gitaggregate -c repos.yaml --expand-env; \
-            chmod +x /opt/odoo/odoo/odoo.py /opt/odoo/odoo/openerp-server /opt/odoo/odoo/openerp-gevent; \
-            create_addons_symlinks; \
-            [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \
-            [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
-            deactivate; \
-            . ~/.nvm/nvm.sh; \
-            xargs npm install -g < /opt/odoo/npm.txt;
+    . ~/.venv/bin/activate; \
+    [ "$AUTO_FILL_REPOS" = true ] && auto_fill_repos; \
+    gitaggregate -c repos.yaml --expand-env; \
+    chmod +x /opt/odoo/odoo/odoo.py /opt/odoo/odoo/openerp-server /opt/odoo/odoo/openerp-gevent; \
+    create_addons_symlinks; \
+    [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \
+    [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
+    deactivate; \
+    . ~/.nvm/nvm.sh; \
+    xargs -r npm install -g < /opt/odoo/npm.txt;
 
 ONBUILD USER root
 

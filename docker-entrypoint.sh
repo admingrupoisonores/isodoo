@@ -2,10 +2,10 @@
 set -e
 
 # Enable NODE environment
-[ -f "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
+[ -f "/home/odoo/.nvm/nvm.sh" ] && . "/home/odoo/.nvm/nvm.sh"
 
 # Use system python environment
-. "$HOME/.venv/bin/activate"
+. "/home/odoo/.venv/bin/activate"
 echo "[entrypoint] ==== SYSTEM ENV. INFO ===="
 INFO_ACTIVE_USER=$(whoami 2>&1)
 INFO_ACTIVE_USER_ID=$(id -u 2>&1)
@@ -13,7 +13,7 @@ INFO_ACTIVE_USER_GID=$(id -g 2>&1)
 echo "[entrypoint] - Active user: $INFO_ACTIVE_USER ($INFO_ACTIVE_USER_ID:$INFO_ACTIVE_USER_GID)"
 INFO_PYTHON_VERSION=$(python --version 2>&1)
 echo "[entrypoint] - Python version: $INFO_PYTHON_VERSION"
-if [ -f "$HOME/.nvm/nvm.sh" ]; then
+if [ -f "/home/odoo/.nvm/nvm.sh" ]; then
     INFO_NODE_VERSION=$(node --version 2>&1)
     echo "[entrypoint] - Node version: $INFO_NODE_VERSION"
 fi
