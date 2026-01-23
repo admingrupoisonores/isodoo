@@ -214,7 +214,7 @@ ONBUILD WORKDIR /opt/odoo/git/odoo
 
 # hadolint ignore=DL3042
 ONBUILD RUN set -ex; \
-            . ../.venv/bin/activate; \
+            . /opt/odoo/.venv/bin/activate; \
             printf '#!/bin/bash\n/opt/odoo/git/odoo/odoo-bin "$@"' > /opt/odoo/.venv/bin/odoo; \
             chmod +x /opt/odoo/.venv/bin/odoo; \
             # Hard-Change pinned versions

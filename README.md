@@ -1,7 +1,18 @@
-# ISO ODOO (isOdoo)
+<h1 align="center">
+  <div>isOdoo - Container Image</div>
 
+[![Tests](https://github.com/GrupoIsonor/isOdoo/actions/workflows/isodoo.yml/badge.svg)](https://github.com/GrupoIsonor/isOdoo/actions/workflows/isodoo.yml)
+
+</h1>
+
+<p align="center">
+ISO 0doo (By <a src="https://www.grupoisonor.es/">Grupo Isonor</a>)
+</p>
+<p align="center">
 *** PROJECT UNDER DEVELOPMENT. NOT READY FOR PRODUCTION ***
+</p>
 
+---
 
 A lightweight image for running Odoo from 6.0 to the moon! Strongly inspired by the [Doodba project](https://github.com/Tecnativa/doodba/) and the official [Odoo image](https://github.com/odoo/docker).
 
@@ -43,9 +54,7 @@ To configure Odoo, simply use environment variables with the prefix ```OCONF__{s
 |----------------|-------------|
 | EXT_DEPS_OVERRIDES | The overrides for the module external dependency names (old_name:new_name) separated by commas (Only useful if AUTO_DOWNLOAD_DEPENDENCIES is used) |
 | ODOO_VERSION | The version of Odoo to install |
-| VERIFY_MISSING_MODULES | Indicates whether all modules (and other modules on which it depends) are available |
 | AUTO_DOWNLOAD_DEPENDENCIES | Indicates whether all external dependencies of the available modules must be downloaded |
-| AUTO_FILL_REPOS | Indicates whether repos.yaml should be adjusted to match what is used in addons.yaml (OCA repositories only) |
 
 ### -ONBUILD- Environment Variables
 
@@ -55,6 +64,8 @@ To configure Odoo, simply use environment variables with the prefix ```OCONF__{s
 | GIT_DEPTH_NORMAL | The default depth of commits | Yes | 1 |
 | GIT_DEPTH_MERGE | The default depth of commits when cloning with merges | Yes | 500 |
 | EXT_DEPS_OVERRIDES | The overrides for the dependency names (old_name:new_name) separated by commas (Only useful if AUTO_DOWNLOAD_DEPENDENCIES is used) | No | "" |
+| VERIFY_MISSING_MODULES | Indicates whether all modules (and other modules on which it depends) are available |
+| AUTO_FILL_REPOS | Indicates whether repos.yaml should be adjusted to match what is used in addons.yaml (OCA repositories only) |
 
 ** Check the Dockerfile for more configuration variables/args.
 
@@ -106,6 +117,8 @@ services:
       OCONF__options__db_host: odoo-db
       OCONF__options__db_name: odoodb
       OCONF__options__proxy_mode: false
+    volumes:
+      - filestore:/var/lib/odoo/filestore:z
     hostname: odoo
 
   db:
@@ -117,6 +130,8 @@ services:
       POSTGRES_PASSWORD: odoo
       POSTGRES_USER: odoo
       POSTGRES_INITDB_ARGS: --locale=C --encoding=UTF8
+    volumes:
+      - db:/var/lib/postgresql:z
     hostname: odoo-db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U odoo -d odoodb"]
@@ -126,10 +141,11 @@ services:
       start_period: 30s
 
 
+volumes:
+  filestore:
+  db:
+
 networks:
   frontend:
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.host_binding_ipv4: 127.0.0.1
   dbnet:
 ```

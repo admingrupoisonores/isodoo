@@ -214,9 +214,9 @@ ONBUILD WORKDIR /opt/odoo/git/odoo
 
 # hadolint ignore=DL3042
 ONBUILD RUN set -ex; \
-            . ../.venv/bin/activate; \
-            printf '#!/bin/bash\n/opt/odoo/git/odoo/odoo-bin "$@"' > /opt/git/.venv/bin/odoo; \
-            chmod +x /opt/git/.venv/bin/odoo; \
+            . /opt/odoo/.venv/bin/activate; \
+            printf '#!/bin/bash\n/opt/odoo/git/odoo/odoo-bin "$@"' > /opt/odoo/.venv/bin/odoo; \
+            chmod +x /opt/odoo/.venv/bin/odoo; \
             # Hard-Change pinned versions
             sed -i \
                 -e '/^pytz==/c\pytz>=2025.2' \
