@@ -10,12 +10,11 @@ ISO 0doo (By <a src="https://www.grupoisonor.es/">Grupo Isonor</a>)
 </p>
 <p align="center">
 *** PROJECT UNDER DEVELOPMENT. NOT READY FOR PRODUCTION ***
+
+A lightweight image for running Odoo from 6.0 to the moon! Strongly inspired by the [Doodba project](https://github.com/Tecnativa/doodba/) and the official [Odoo image](https://github.com/odoo/docker).
 </p>
 
 ---
-
-A lightweight image for running Odoo from 6.0 to the moon! Strongly inspired by the [Doodba project](https://github.com/Tecnativa/doodba/) and the official [Odoo image](https://github.com/odoo/docker).
-
 
 ## :ballot_box_with_check: Features
 
