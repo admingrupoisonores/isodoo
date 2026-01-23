@@ -85,7 +85,7 @@ class TestIsOdooContainer:
         assert npm_info and "invented1234" not in npm_info
 
     def test_odoo_repos(self, exec_docker):
-        repo_info = exec_docker("odoo", ["cat", "/opt/odoo/repos.yaml"])
+        repo_info = exec_docker("odoo", ["cat", "/opt/odoo/repos.auto.yaml"])
         assert "odoo" in repo_info
         repo_info = exec_docker("odoo", ["ls", "/var/lib/odoo/core"])
         assert repo_info and "cannot access" not in repo_info
@@ -94,7 +94,7 @@ class TestIsOdooContainer:
     def test_odoo_extra_addons(self, exec_docker, env_info):
         odoo_ver = env_info["options"]["odoo_version"]
         addon_info = EXTRA_ADDONS[odoo_ver]
-        repo_info = exec_docker("odoo", ["cat", "/opt/odoo/repos.yaml"])
+        repo_info = exec_docker("odoo", ["cat", "/opt/odoo/repos.auto.yaml"])
         assert addon_info[0] in repo_info
         repo_info = exec_docker("odoo", ["ls", "/var/lib/odoo/extra"])
         assert repo_info and "cannot access" not in repo_info

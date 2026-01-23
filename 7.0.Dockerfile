@@ -128,20 +128,22 @@ USER root
 COPY --chown=odoo:odoo recipes/7.0/requirements.txt /opt/odoo/requirements.txt
 COPY docker-entrypoint.sh /usr/local/sbin/
 COPY tools/exec_env.sh /usr/local/sbin/exec_env
-COPY tools/generate_config.py /usr/local/sbin/generate_config
-COPY tools/create_addons_symlinks.py /usr/local/sbin/create_addons_symlinks
-COPY tools/check_addons_dependencies.py /usr/local/sbin/check_addons_dependencies
-COPY tools/auto_fill_external_dependencies.py /usr/local/sbin/auto_fill_external_dependencies
+COPY tools/isodoo_generate_config.py /usr/local/sbin/isodoo_generate_config
+COPY tools/isodoo_create_addons_symlinks.py /usr/local/sbin/isodoo_create_addons_symlinks
+COPY tools/isodoo_check_addons_dependencies.py /usr/local/sbin/isodoo_check_addons_dependencies
+COPY tools/isodoo_auto_fill_external_dependencies.py /usr/local/sbin/isodoo_auto_fill_external_dependencies
 COPY tools/wait_for_psql.py /usr/local/sbin/wait_for_psql
-COPY tools/auto_fill_repos.py /usr/local/sbin/auto_fill_repos
+COPY tools/isodoo_auto_fill_repos.py /usr/local/sbin/isodoo_auto_fill_repos
+COPY tools/isodoo_update_addons.sh /usr/local/sbin/isodoo_update_addons
 RUN chmod +x \
     /usr/local/sbin/docker-entrypoint.sh \
     /usr/local/sbin/exec_env \
-    /usr/local/sbin/generate_config \
-    /usr/local/sbin/create_addons_symlinks \
-    /usr/local/sbin/check_addons_dependencies \
-    /usr/local/sbin/auto_fill_external_dependencies \
-    /usr/local/sbin/auto_fill_repos \
+    /usr/local/sbin/isodoo_generate_config \
+    /usr/local/sbin/isodoo_create_addons_symlinks \
+    /usr/local/sbin/isodoo_check_addons_dependencies \
+    /usr/local/sbin/isodoo_auto_fill_external_dependencies \
+    /usr/local/sbin/isodoo_auto_fill_repos \
+    /usr/local/sbin/isodoo_update_addons \
     /usr/local/sbin/wait_for_psql;
 
 
@@ -157,15 +159,16 @@ RUN set -ex; \
 # Install Odoo + Extras
 ONBUILD ARG EXT_DEPS_OVERRIDES='' \
             ODOO_VERSION="7.0" \
-            VERIFY_MISSING_MODULES=true \
-            AUTO_DOWNLOAD_DEPENDENCIES=true \
-            AUTO_FILL_REPOS=true
+            AUTO_DOWNLOAD_DEPENDENCIES=true
 ONBUILD ENV LC_ALL="C.UTF-8" \
             LANG="C.UTF-8" \
             GIT_DEPTH_NORMAL=1 \
             GIT_DEPTH_MERGE=500 \
             EXT_DEPS_OVERRIDES="openid:python-openid,ldap:python-ldap,${EXT_DEPS_OVERRIDES}" \
+            VERIFY_MISSING_MODULES=true \
+            AUTO_FILL_REPOS=true \
             ODOO_VERSION="${ODOO_VERSION}" \
+            OCONF__options__data_dir="/var/lib/odoo/filestore" \
             OCONF__options__addons_path="/var/lib/odoo/core,/var/lib/odoo/extra"
 
 ONBUILD COPY --from=deps --chown=odoo:odoo apt.txt /opt/odoo/apt.txt
@@ -175,17 +178,15 @@ ONBUILD COPY --from=addons --chown=odoo:odoo addons.yaml /opt/odoo/addons.yaml
 
 ONBUILD USER odoo
 
-ONBUILD WORKDIR /opt/odoo
+ONBUILD WORKDIR /opt/odoo/git
 
 ONBUILD RUN set -ex; \
+            isodoo_update_addons; \
             . ~/.venv/bin/activate; \
-            [ "$AUTO_FILL_REPOS" = true ] && auto_fill_repos; \
-            gitaggregate -c repos.yaml --expand-env; \
-            chmod +x /opt/odoo/odoo/openerp-server; \
-            create_addons_symlinks; \
-            [ "$VERIFY_MISSING_MODULES" = true ] && check_addons_dependencies; \
-            [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && auto_fill_external_dependencies; \
+            [ "$AUTO_DOWNLOAD_DEPENDENCIES" = true ] && isodoo_auto_fill_external_dependencies; \
             deactivate;
+
+ONBUILD WORKDIR /opt/odoo
 
 ONBUILD USER root
 
@@ -199,13 +200,13 @@ ONBUILD RUN set -ex; \
 
 ONBUILD USER odoo
 
-ONBUILD WORKDIR /opt/odoo/odoo
+ONBUILD WORKDIR /opt/odoo/git/odoo
 
 # hadolint ignore=DL3042
 ONBUILD RUN set -ex; \
-            . ../.venv/bin/activate; \
-            printf '#!/bin/bash\n/opt/odoo/odoo/openerp-server "$@"' > ../.venv/bin/odoo; \
-            chmod +x ../.venv/bin/odoo; \
+            . /opt/odoo/.venv/bin/activate; \
+            printf '#!/bin/bash\n/opt/odoo/git/odoo/openerp-server "$@"' > /opt/odoo/.venv/bin/odoo; \
+            chmod +x /opt/odoo/.venv/bin/odoo; \
             mv /opt/odoo/requirements.txt .;\
             pip install --no-binary psycopg2 -r requirements.txt; \
             pip install -r /opt/odoo/pip.txt; \
@@ -216,7 +217,8 @@ ONBUILD RUN set -ex; \
             find .. -name "*.pyc" -type f -delete; \
             rm -rf /tmp/*; \
             # Post-configurations
-            python -m compileall /var/lib/odoo/; \
+            python -m compileall /var/lib/odoo/core; \
+            python -m compileall /var/lib/odoo/extra; \
             # Ensure all is working
             odoo --version; \
             deactivate;

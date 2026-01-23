@@ -10,7 +10,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 YAML_FILE = "/opt/odoo/addons.yaml"
-SOURCE_BASE_PATH = "/opt/odoo"
+SOURCE_BASE_PATH = "/opt/odoo/git"
 DEST_BASE_CORE_PATH = "/var/lib/odoo/core"
 DEST_BASE_EXTRA_PATH = "/var/lib/odoo/extra"
 

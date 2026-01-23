@@ -6,6 +6,7 @@ from pathlib import Path
 
 ADDONS_YAML_FILE = Path("/opt/odoo/addons.yaml")
 REPOS_YAML_FILE = Path("/opt/odoo/repos.yaml")
+AUTO_REPOS_YAML_FILE = Path("/opt/odoo/repos.auto.yaml")
 
 
 def main():
@@ -16,7 +17,6 @@ def main():
         print(f"Error reading YAML: {e}")
         sys.exit(1)
 
-    added = False
     for repo_name in addons.keys():
         if repo_name not in repos:
             repos[repo_name] = {
@@ -26,20 +26,16 @@ def main():
                 "merges": ["oca $ODOO_VERSION"],
             }
             print(f"New OCA repo added to repos: {repo_name}")
-            added = True
 
-    if added:
-        try:
-            REPOS_YAML_FILE.write_text(
-                yaml.dump(repos, default_flow_style=False, indent=2, sort_keys=False),
-                encoding="utf-8",
-            )
-            print(f"{REPOS_YAML_FILE} successfully updated")
-        except Exception as e:
-            print(f"Error writting repos.yaml: {e}")
-            sys.exit(1)
-    else:
-        print("No new OCA repos to add")
+    try:
+        AUTO_REPOS_YAML_FILE.write_text(
+            yaml.dump(repos, default_flow_style=False, indent=2, sort_keys=False),
+            encoding="utf-8",
+        )
+        print(f"{AUTO_REPOS_YAML_FILE} successfully created")
+    except Exception as e:
+        print(f"Error writting repos.yaml: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
