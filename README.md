@@ -52,18 +52,20 @@ To configure Odoo, simply use environment variables with the prefix ```OCONF__{s
 
 | Name | Description |
 |----------------|-------------|
-| EXT_DEPS_OVERRIDES | The overrides for the module external dependency names (old_name:new_name) separated by commas (Only useful if AUTO_DOWNLOAD_DEPENDENCIES is used) |
-| ODOO_VERSION | The version of Odoo to install |
+| EXT_DEPS_OVERRIDES | Overrides for the module external dependency names (old_name:new_name) separated by commas (Only useful if AUTO_DOWNLOAD_DEPENDENCIES is used) |
+| ODOO_VERSION | Version of Odoo to install |
 | AUTO_DOWNLOAD_DEPENDENCIES | Indicates whether all external dependencies of the available modules must be downloaded |
 
 ### -ONBUILD- Environment Variables
 
 | Name | Description | Required | Default |
 |----------------|-------------|-------------|-------------|
+| PUID | User ID to be used by the "odoo" user (only recommended for devel/testing) | No | 7777 |
+| PGID | Group ID to be used by the "odoo" user (only recommended for devel/testing) | No | 7777 |
 | GITHUB_TOKEN | User token to use with git-aggregator | No | "" |
-| GIT_DEPTH_NORMAL | The default depth of commits | Yes | 1 |
-| GIT_DEPTH_MERGE | The default depth of commits when cloning with merges | Yes | 500 |
-| EXT_DEPS_OVERRIDES | The overrides for the dependency names (old_name:new_name) separated by commas (Only useful if AUTO_DOWNLOAD_DEPENDENCIES is used) | No | "" |
+| GIT_DEPTH_NORMAL | Default depth of commits | Yes | 1 |
+| GIT_DEPTH_MERGE | Default depth of commits when cloning with merges | Yes | 500 |
+| EXT_DEPS_OVERRIDES | Overrides for the dependency names (old_name:new_name) separated by commas (Only useful if AUTO_DOWNLOAD_DEPENDENCIES is used) | No | "" |
 | VERIFY_MISSING_MODULES | Indicates whether all modules (and other modules on which it depends) are available |
 | AUTO_FILL_REPOS | Indicates whether repos.yaml should be adjusted to match what is used in addons.yaml (OCA repositories only) |
 
