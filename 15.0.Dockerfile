@@ -60,7 +60,7 @@ RUN set -eux; \
         --gid "${USER_ODOO_GID}" \
         -s /bin/bash \
         odoo; \
-    mkdir -p /home/odoo /etc/odoo /opt/odoo /var/lib/odoo; \
+    mkdir -p /home/odoo /etc/odoo /opt/odoo /var/lib/odoo/data; \
     chown -R odoo:odoo /home/odoo /opt/odoo /etc/odoo /var/lib/odoo;
 
 
@@ -166,7 +166,7 @@ ONBUILD ENV LC_ALL="C.UTF-8" \
             VERIFY_MISSING_MODULES=true \
             AUTO_FILL_REPOS=true \
             ODOO_VERSION="${ODOO_VERSION}" \
-            OCONF__options__data_dir="/var/lib/odoo/filestore" \
+            OCONF__options__data_dir="/var/lib/odoo/data" \
             OCONF__options__addons_path="/var/lib/odoo/core,/var/lib/odoo/extra"
 
 ONBUILD COPY --from=deps --chown=odoo:odoo apt.txt /opt/odoo/apt.txt
