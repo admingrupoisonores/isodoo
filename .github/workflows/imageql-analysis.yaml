@@ -1,0 +1,42 @@
+name: Docker Security Scan (Trivy GHCR)
+
+on:
+  workflow_run:
+    workflows: ["isOdoo"]
+    types: [completed]
+    branches: [master]
+
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  scan:
+    strategy:
+      matrix:
+        version: ["6.0", "6.1", "7.0", "8.0", "9.0", "10.0", "11.0", "12.0", "13.0", "14.0", "15.0", "16.0", "17.0", "18.0", "19.0"]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:${{ matrix.version }}
+          format: sarif
+          output: trivy.sarif
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          scanners: vuln
+
+      - name: Upload SARIF to Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
